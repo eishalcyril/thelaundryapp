@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
 import 'package:laundry_app/config.dart';
+import 'package:lottie/lottie.dart';
 
 class AdminServicesPage extends StatefulWidget {
   const AdminServicesPage({super.key});
@@ -31,7 +32,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Unable to delete\n Reason:${response.toString()}!'),
+          content: Text('${response['data'].toString()}!'),
           backgroundColor: Colors.red,
         ),
       );
@@ -48,8 +49,8 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Unable to delete\n Reason:${response.toString()}!'),
-          backgroundColor: Colors.red,
+          content: Text('${response['data'].toString()}!'),
+          backgroundColor: Colors.red.shade700,
         ),
       );
     }
@@ -96,7 +97,11 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                   future: NewApiService().getAdminServices(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: Lottie.asset('assets/loading-washing.json',
+                            height: MediaQuery.of(context).size.height * .5,
+                            width: MediaQuery.of(context).size.width * .5),
+                      );
                     }
                     if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
@@ -175,7 +180,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                                       icon: const Icon(Icons.delete_outline),
                                       label: const Text('Delete'),
                                       style: TextButton.styleFrom(
-                                        foregroundColor: Colors.red,
+                                        foregroundColor: Colors.red.shade700,
                                       ),
                                     ),
                                   ],
@@ -308,6 +313,8 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
     return showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10))),
         title: const Text('Delete Service'),
         content: const Text('Are you sure you want to delete this service?'),
         actions: [
@@ -321,7 +328,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
               Navigator.pop(context);
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
+              backgroundColor: Colors.red.shade700,
             ),
             child: Text(
               'Delete',

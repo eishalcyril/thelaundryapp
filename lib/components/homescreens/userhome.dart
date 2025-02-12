@@ -1,10 +1,12 @@
-import 'dart:developer';
+import 'dart:developer' as dev;
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
 import 'package:laundry_app/config.dart';
 import 'package:laundry_app/usercubit/user_cubit.dart';
+import 'package:lottie/lottie.dart';
 import 'package:uuid/uuid.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,6 +17,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final List<IconData> icons = [
+    Icons.local_laundry_service,
+    Icons.cleaning_services,
+    Icons.local_offer,
+    Icons.room_service,
+    Icons.business_center,
+  ];
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<UserCubit, UserState>(
@@ -69,8 +78,13 @@ class _HomePageState extends State<HomePage> {
                         builder: (context, snapshot) {
                           if (snapshot.connectionState ==
                               ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
+                            return Center(
+                              child: Lottie.asset('assets/loading-washing.json',
+                                  height:
+                                      MediaQuery.of(context).size.height * .5,
+                                  width:
+                                      MediaQuery.of(context).size.width * .5),
+                            );
                           }
                           if (snapshot.hasError) {
                             return Center(
@@ -85,7 +99,7 @@ class _HomePageState extends State<HomePage> {
                                 service['serviceName'],
                                 '\Rs. ${service['price']}',
                                 service['materialType'],
-                                Icons.local_laundry_service,
+                                icons[Random().nextInt(icons.length)],
                                 onTap: () {
                                   _showOrderSheet(context, service);
                                 },
@@ -101,7 +115,11 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         } else {
-          return CircularProgressIndicator();
+          return Center(
+            child: Lottie.asset('assets/loading-washing.json',
+                height: MediaQuery.of(context).size.height * .5,
+                width: MediaQuery.of(context).size.width * .5),
+          );
         }
       },
     );
@@ -287,7 +305,7 @@ class _HomePageState extends State<HomePage> {
                           .placeOrder(orderData: orderData)
                           .then((response) {
                         Navigator.pop(context);
-                        log(orderData.toString());
+                        dev.log(orderData.toString());
 
                         if (response['type'] == 'SUCCESS') {
                           ScaffoldMessenger.of(context).showSnackBar(
@@ -296,8 +314,12 @@ class _HomePageState extends State<HomePage> {
                               backgroundColor: Colors.green,
                             ),
                           );
+
+                          setState(() {
+                            widget.onPlaced!();
+                          });
                         } else {
-                          log(response.toString());
+                          dev.log(response.toString());
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(response['message'] ??
@@ -305,10 +327,12 @@ class _HomePageState extends State<HomePage> {
                               backgroundColor: Colors.red,
                             ),
                           );
+
+                          setState(() {
+                            widget.onPlaced!();
+                          });
                         }
                       });
-                      widget.onPlaced;
-                      setState(() {});
                     },
                     child: Text(
                       'Place Order',

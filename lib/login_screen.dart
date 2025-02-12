@@ -38,11 +38,6 @@ class _LoginFormState extends State<LoginForm> {
     // _passwordController =
     // //     TextEditingController(text: box.get('password') as String?);
 
-    String? phoneNumber = box.get('phoneNumber');
-    String? email = box.get('email');
-    String? address = box.get('address');
-    isPhone = phoneNumber == null ? false : true;
-
     context.read<UserCubit>().initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -58,12 +53,7 @@ class _LoginFormState extends State<LoginForm> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
-                    SingleChildScrollView(
-                        child: OnboardContent(
-                      email: email,
-                      phoneNumber: phoneNumber,
-                      address: address,
-                    )),
+                    SingleChildScrollView(child: OnboardContent()),
                   ],
                 ),
               ),

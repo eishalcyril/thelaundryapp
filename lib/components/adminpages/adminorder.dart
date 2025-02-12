@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
-import 'package:laundry_app/config.dart'; // Import your config file
+import 'package:laundry_app/config.dart';
+import 'package:lottie/lottie.dart'; // Import your config file
 
 class AdminOrdersPage extends StatefulWidget {
   const AdminOrdersPage({super.key});
@@ -20,13 +21,27 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
           'Manage Orders',
           style: TextStyle(color: txtColor),
         ),
+        actions: [
+          IconButton.filledTonal(
+            onPressed: () {
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/', (route) => false);
+            },
+            icon: Icon(Icons.logout),
+            color: Colors.white,
+          )
+        ],
         backgroundColor: primaryColor, // Use primaryColor from config
       ),
       body: FutureBuilder(
         future: NewApiService().getAdminOrders(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+             return Center(
+                        child: Lottie.asset('assets/loading-washing.json',
+                            height: MediaQuery.of(context).size.height * .5,
+                            width: MediaQuery.of(context).size.width * .5),
+                      );
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
@@ -174,9 +189,13 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                   TextStyle(color: secondaryColor)), // Colon in its own column
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
-          child: Text(value, style: TextStyle(color: clr)),
-        ),
+            padding:
+                const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
+            child: Text(value,
+                style: TextStyle(
+                  color: clr,
+                  decoration: TextDecoration.underline,
+                ))),
       ],
     );
   }
@@ -201,9 +220,11 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
       case 1:
         return Colors.blue;
       case 2:
-        return Colors.deepOrange;
+        return Colors.red.shade700;
       case 3:
         return Colors.green;
+      case 4:
+        return Colors.brown;
       default:
         return Colors.black;
     }

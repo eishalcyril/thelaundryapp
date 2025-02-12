@@ -15,13 +15,7 @@ import 'package:laundry_app/usercubit/user_cubit.dart';
 class OnboardContent extends StatefulWidget {
   const OnboardContent({
     super.key,
-    required this.phoneNumber,
-    required this.email,
-    required this.address,
   });
-  final String? phoneNumber;
-  final String? email;
-  final String? address;
 
   @override
   State<OnboardContent> createState() => _OnboardContentState();
@@ -31,8 +25,8 @@ class _OnboardContentState extends State<OnboardContent> {
   late PageController _pageController;
   Box box = Hive.box('laundry');
 
-  late TextEditingController _phoneNumberController;
-  late TextEditingController _emailController;
+  final TextEditingController _phoneNumberController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   late TextEditingController firstname;
   late TextEditingController lastname;
   final _signinformKey = GlobalKey<FormState>();
@@ -45,25 +39,21 @@ class _OnboardContentState extends State<OnboardContent> {
   // late TextEditingController _passwordController;
 
   final TextEditingController _newPasswordController = TextEditingController();
-  late TextEditingController _addressController;
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   // final TextEditingController _signinpwd = TextEditingController();
 
   @override
   void initState() {
-    _phoneNumberController = TextEditingController(text: widget.phoneNumber);
-    _emailController = TextEditingController(text: widget.email);
-    _addressController = TextEditingController(text: widget.address);
     firstname = TextEditingController(text: '');
     lastname = TextEditingController(text: '');
-    isPhone = widget.phoneNumber == null ? false : true;
     // _passwordVisible = true;
     _newPasswordVisible = true;
     _confirmPasswordVisible = true;
     context.read<UserCubit>().initState();
     super.initState();
-    _pageController = PageController(initialPage: (isPhone) ? 1 : 0)
+    _pageController = PageController(initialPage: 0)
       ..addListener(() {
         setState(() {});
       });
@@ -74,12 +64,6 @@ class _OnboardContentState extends State<OnboardContent> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     setState(() {});
-  }
-
-  void reload() {
-    setState(() {
-      isPhone = true;
-    });
   }
 
   @override
@@ -144,12 +128,12 @@ class _OnboardContentState extends State<OnboardContent> {
                           );
                         } else {
                           // setState(()  {
-                          bool isPageValid = ((state is UserInitial)
-                                  ? _signinformKey.currentState?.validate()
-                                  : _signupformKey.currentState?.validate()) ??
-                              false;
+                          // bool isPageValid = ((state is UserInitial)
+                          //         ? _signinformKey.currentState?.validate()
+                          //         : _signupformKey.currentState?.validate()) ??
+                          //     false;
 
-                          if (isPageValid &&
+                          if (_signinformKey.currentState!.validate() &&
                               _pageController.page == 1 &&
                               state is UserInitial) {
                             context.read<UserCubit>().userLogin({
@@ -159,7 +143,8 @@ class _OnboardContentState extends State<OnboardContent> {
                             // await NewApiService().login(
                             //     email: _emailController.text,
                             //     password: _signinpwd.text);
-                          } else {
+                          } else if (state is UserSignUp &&
+                              _signupformKey.currentState!.validate()) {
                             context.read<UserCubit>().userLogin({
                               'firstName': firstname.text,
                               'lastName': lastname.text,
@@ -334,10 +319,8 @@ class _OnboardContentState extends State<OnboardContent> {
                                         ),
                                         fillColor: Colors.grey.shade100,
                                         filled: true,
-                                        prefixIcon: isPhone
-                                            ? const Icon(
-                                                CupertinoIcons.mail_solid)
-                                            : const Icon(CupertinoIcons.mail),
+                                        prefixIcon:
+                                            const Icon(CupertinoIcons.mail),
                                         prefixIconColor: Colors.blueGrey,
                                         labelStyle: const TextStyle(
                                           fontSize: 14,
@@ -381,7 +364,8 @@ class _OnboardContentState extends State<OnboardContent> {
                                         focusedErrorBorder: OutlineInputBorder(
                                             borderRadius:
                                                 BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color.fromARGB(255, 171, 18, 7), width: 1.5))),
+                                            borderSide:
+                                                const BorderSide(color: Color.fromARGB(255, 171, 18, 7), width: 1.5))),
                                     validator: (value) {
                                       if (value!.isEmpty) {
                                         return 'Email id cannot be empty';
@@ -748,10 +732,8 @@ class _OnboardContentState extends State<OnboardContent> {
                                         ),
                                         fillColor: Colors.grey.shade100,
                                         filled: true,
-                                        prefixIcon: isPhone
-                                            ? const Icon(
-                                                CupertinoIcons.mail_solid)
-                                            : const Icon(CupertinoIcons.mail),
+                                        prefixIcon:
+                                            const Icon(CupertinoIcons.mail),
                                         prefixIconColor: Colors.blueGrey,
                                         labelStyle: const TextStyle(
                                           fontSize: 14,
@@ -795,7 +777,8 @@ class _OnboardContentState extends State<OnboardContent> {
                                         focusedErrorBorder: OutlineInputBorder(
                                             borderRadius:
                                                 BorderRadius.circular(15),
-                                            borderSide: const BorderSide(color: Color.fromARGB(255, 171, 18, 7), width: 1.5))),
+                                            borderSide:
+                                                const BorderSide(color: Color.fromARGB(255, 171, 18, 7), width: 1.5))),
                                     validator: (value) {
                                       if (value!.isEmpty) {
                                         return 'Email id cannot be empty';
@@ -809,129 +792,50 @@ class _OnboardContentState extends State<OnboardContent> {
                                     },
                                     controller: _emailController,
                                   ),
-                                  if (!isPhone)
-                                    TextFormField(
-                                      cursorErrorColor: Colors.blue[900],
-                                      onChanged: (value) {
-                                        setState(() {
-                                          // checked = false;
-                                        });
+                                  TextFormField(
+                                    cursorErrorColor: Colors.blue[900],
+                                    onChanged: (value) {
+                                      setState(() {
+                                        // checked = false;
+                                      });
 
-                                        _signupformKey.currentState!.validate();
-                                      },
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'interfont'),
-                                      keyboardType: TextInputType.phone,
-                                      onTapOutside: (event) {
-                                        FocusManager.instance.primaryFocus
-                                            ?.unfocus();
-                                        _signupformKey.currentState!.validate();
-                                      },
-                                      textInputAction: TextInputAction.next,
-                                      decoration: InputDecoration(
-                                          errorStyle: TextStyle(
-                                            color: primaryColor,
-                                          ),
-                                          fillColor: Colors.grey.shade100,
-                                          filled: true,
-                                          prefixIcon: isPhone
-                                              ? const Icon(
-                                                  CupertinoIcons.phone_solid)
-                                              : const Icon(CupertinoIcons
-                                                  .phone_fill_badge_plus),
-                                          prefixIconColor: Colors.blueGrey,
-                                          labelStyle: const TextStyle(
-                                            fontSize: 14,
-                                            color: Colors.blueGrey,
-                                            fontFamily: 'interfsont',
-                                          ),
-                                          prefixText: '+91 ',
-                                          prefixStyle: const TextStyle(
-                                              color: Colors.blueGrey,
-                                              fontSize: 16),
-                                          labelText: "Phone",
-                                          hintStyle: const TextStyle(
-                                            fontSize: 15,
-                                            color: Colors.blueGrey,
-                                            fontFamily: 'interfont',
-                                          ),
-                                          hintText: "Enter your phone no.",
-                                          focusColor: Colors.white,
-                                          focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              borderSide: const BorderSide(
-                                                  color: Color.fromARGB(
-                                                      255, 4, 59, 103),
-                                                  width: 1.5)),
-                                          disabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              borderSide: const BorderSide(
-                                                  color: Colors.blueGrey,
-                                                  width: 1.5)),
-                                          enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              borderSide: const BorderSide(
-                                                  color: Colors.blueGrey,
-                                                  width: 1.5)),
-                                          errorBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(15),
-                                              borderSide: const BorderSide(
-                                                  color: Color.fromARGB(255, 171, 18, 7),
-                                                  width: 1.5)),
-                                          focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(15), borderSide: const BorderSide(color: Color.fromARGB(255, 171, 18, 7), width: 1.5))),
-                                      validator: (value) {
-                                        if (value!.isEmpty) {
-                                          return 'Phone no.cannot be empty';
-                                        }
-                                        if (!RegExp(r'^\d+$').hasMatch(value)) {
-                                          return 'Ph. no. should be digits(0-9)';
-                                        }
-                                        if (value.length != 10) {
-                                          return 'Phone no. should be 10 digits';
-                                        }
-
-                                        return null;
-                                      },
-                                      controller: _phoneNumberController,
-                                    ),
-                                  if (!isPhone)
-                                    TextFormField(
-                                      cursorErrorColor: Colors.blue[900],
-                                      controller: _addressController,
-                                      maxLines: 3,
-                                      style: const TextStyle(
-                                          color: Colors.black,
-                                          fontFamily: 'interfont'),
-                                      keyboardType: TextInputType.multiline,
-                                      textInputAction: TextInputAction.newline,
-                                      decoration: InputDecoration(
-                                        alignLabelWithHint: true,
+                                      _signupformKey.currentState!.validate();
+                                    },
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontFamily: 'interfont'),
+                                    keyboardType: TextInputType.phone,
+                                    onTapOutside: (event) {
+                                      FocusManager.instance.primaryFocus
+                                          ?.unfocus();
+                                      _signupformKey.currentState!.validate();
+                                    },
+                                    textInputAction: TextInputAction.next,
+                                    decoration: InputDecoration(
                                         errorStyle: TextStyle(
                                           color: primaryColor,
                                         ),
                                         fillColor: Colors.grey.shade100,
                                         filled: true,
-                                        prefixIcon: const Icon(
-                                          Icons.location_on,
-                                        ),
+                                        prefixIcon: const Icon(CupertinoIcons
+                                            .phone_fill_badge_plus),
                                         prefixIconColor: Colors.blueGrey,
                                         labelStyle: const TextStyle(
                                           fontSize: 14,
                                           color: Colors.blueGrey,
                                           fontFamily: 'interfsont',
                                         ),
-                                        labelText: "Address",
+                                        prefixText: '+91 ',
+                                        prefixStyle: const TextStyle(
+                                            color: Colors.blueGrey,
+                                            fontSize: 16),
+                                        labelText: "Phone",
                                         hintStyle: const TextStyle(
                                           fontSize: 15,
                                           color: Colors.blueGrey,
                                           fontFamily: 'interfont',
                                         ),
-                                        hintText: "Enter your complete address",
+                                        hintText: "Enter your phone no.",
                                         focusColor: Colors.white,
                                         focusedBorder: OutlineInputBorder(
                                             borderRadius:
@@ -939,6 +843,12 @@ class _OnboardContentState extends State<OnboardContent> {
                                             borderSide: const BorderSide(
                                                 color: Color.fromARGB(
                                                     255, 4, 59, 103),
+                                                width: 1.5)),
+                                        disabledBorder: OutlineInputBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(15),
+                                            borderSide: const BorderSide(
+                                                color: Colors.blueGrey,
                                                 width: 1.5)),
                                         enabledBorder: OutlineInputBorder(
                                             borderRadius:
@@ -956,24 +866,97 @@ class _OnboardContentState extends State<OnboardContent> {
                                         focusedErrorBorder: OutlineInputBorder(
                                             borderRadius:
                                                 BorderRadius.circular(15),
-                                            borderSide: const BorderSide(
-                                                color: Color.fromARGB(
-                                                    255, 171, 18, 7),
-                                                width: 1.5)),
+                                            borderSide:
+                                                const BorderSide(color: Color.fromARGB(255, 171, 18, 7), width: 1.5))),
+                                    validator: (value) {
+                                      if (value!.isEmpty) {
+                                        return 'Phone no.cannot be empty';
+                                      }
+                                      if (!RegExp(r'^\d+$').hasMatch(value)) {
+                                        return 'Ph. no. should be digits(0-9)';
+                                      }
+                                      if (value.length != 10) {
+                                        return 'Phone no. should be 10 digits';
+                                      }
+
+                                      return null;
+                                    },
+                                    controller: _phoneNumberController,
+                                  ),
+                                  TextFormField(
+                                    cursorErrorColor: Colors.blue[900],
+                                    controller: _addressController,
+                                    maxLines: 3,
+                                    style: const TextStyle(
+                                        color: Colors.black,
+                                        fontFamily: 'interfont'),
+                                    keyboardType: TextInputType.multiline,
+                                    textInputAction: TextInputAction.newline,
+                                    decoration: InputDecoration(
+                                      alignLabelWithHint: true,
+                                      errorStyle: TextStyle(
+                                        color: primaryColor,
                                       ),
-                                      onChanged: (value) {
-                                        _signupformKey.currentState!.validate();
-                                      },
-                                      validator: (value) {
-                                        if (value == null || value.isEmpty) {
-                                          return 'Address cannot be empty';
-                                        }
-                                        if (value.length < 10) {
-                                          return 'Please enter a complete address';
-                                        }
-                                        return null;
-                                      },
+                                      fillColor: Colors.grey.shade100,
+                                      filled: true,
+                                      prefixIcon: const Icon(
+                                        Icons.location_on,
+                                      ),
+                                      prefixIconColor: Colors.blueGrey,
+                                      labelStyle: const TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.blueGrey,
+                                        fontFamily: 'interfsont',
+                                      ),
+                                      labelText: "Address",
+                                      hintStyle: const TextStyle(
+                                        fontSize: 15,
+                                        color: Colors.blueGrey,
+                                        fontFamily: 'interfont',
+                                      ),
+                                      hintText: "Enter your complete address",
+                                      focusColor: Colors.white,
+                                      focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          borderSide: const BorderSide(
+                                              color: Color.fromARGB(
+                                                  255, 4, 59, 103),
+                                              width: 1.5)),
+                                      enabledBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          borderSide: const BorderSide(
+                                              color: Colors.blueGrey,
+                                              width: 1.5)),
+                                      errorBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          borderSide: const BorderSide(
+                                              color: Color.fromARGB(
+                                                  255, 171, 18, 7),
+                                              width: 1.5)),
+                                      focusedErrorBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(15),
+                                          borderSide: const BorderSide(
+                                              color: Color.fromARGB(
+                                                  255, 171, 18, 7),
+                                              width: 1.5)),
                                     ),
+                                    onChanged: (value) {
+                                      _signupformKey.currentState!.validate();
+                                    },
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Address cannot be empty';
+                                      }
+                                      if (value.length < 10) {
+                                        return 'Please enter a complete address';
+                                      }
+                                      return null;
+                                    },
+                                  ),
                                   TextFormField(
                                     onChanged: (value) {
                                       _signupformKey.currentState!.validate();

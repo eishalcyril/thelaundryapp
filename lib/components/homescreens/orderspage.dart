@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:laundry_app/common/line_dash_generator.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
 import 'package:laundry_app/config.dart';
+import 'package:lottie/lottie.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -19,12 +21,25 @@ class _OrdersPageState extends State<OrdersPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Your Orders',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Your Orders',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton.filledTonal(
+                    onPressed: () {
+                      Navigator.of(context)
+                          .pushNamedAndRemoveUntil('/', (route) => false);
+                    },
+                    icon: Icon(Icons.logout),
+                    color: Colors.white,
+                  )
+                ],
               ),
               const SizedBox(height: 16),
               Expanded(
@@ -32,12 +47,38 @@ class _OrdersPageState extends State<OrdersPage> {
                   future: NewApiService().getCustomerOrders(),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
+                      return Center(
+                        child: Lottie.asset('assets/loading-washing.json',
+                            height: MediaQuery.of(context).size.height * .5,
+                            width: MediaQuery.of(context).size.width * .5),
+                      );
                     }
                     if (snapshot.hasError) {
                       return Center(child: Text('Error: ${snapshot.error}'));
                     }
+
                     final orders = snapshot.data ?? [];
+                    if (orders.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Lottie.asset(
+                                'assets/loading-2.json', 
+                                height: MediaQuery.of(context).size.height * .5,
+                                width: MediaQuery.of(context).size.width * .5),
+                            Text(
+                              'No Orders Yet',
+                              style: TextStyle(
+                                  color: primaryColor,
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            LineDash(length: 30, color: primaryColor)
+                          ],
+                        ),
+                      );
+                    }
                     return ListView.builder(
                       itemCount: orders.length,
                       itemBuilder: (context, index) {
@@ -165,7 +206,7 @@ class _OrdersPageState extends State<OrdersPage> {
       case 1:
         return Colors.blue;
       case 2:
-        return Colors.deepOrange;
+        return Colors.red.shade700;
       case 3:
         return Colors.green;
       case 4:

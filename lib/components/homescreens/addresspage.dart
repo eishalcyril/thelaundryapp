@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
 import 'package:laundry_app/config.dart';
 import 'package:laundry_app/usercubit/user_cubit.dart';
+import 'package:lottie/lottie.dart';
 
 class AddressesPage extends StatefulWidget {
   const AddressesPage({super.key});
@@ -29,13 +30,27 @@ class _AddressesPageState extends State<AddressesPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Your Addresses',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Your Addresses',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton.filledTonal(
+                          onPressed: () {
+                            Navigator.of(context)
+                                .pushNamedAndRemoveUntil('/', (route) => false);
+                          },
+                          icon: Icon(Icons.logout),
+                          color: Colors.white,
+                        )
+                      ],
                     ),
+
                     const SizedBox(height: 16),
                     Expanded(
                       child: ListView(
@@ -90,7 +105,11 @@ class _AddressesPageState extends State<AddressesPage> {
             ),
           );
         } else {
-          return CircularProgressIndicator();
+       return Center(
+                        child: Lottie.asset('assets/loading-washing.json',
+                            height: MediaQuery.of(context).size.height * .5,
+                            width: MediaQuery.of(context).size.width * .5),
+                      );
         }
       },
     );

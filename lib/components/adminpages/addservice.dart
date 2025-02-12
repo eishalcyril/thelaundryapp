@@ -24,7 +24,16 @@ class _AddServicePageState extends State<AddServicePage> {
         title: Text(
           'Add New Service',
           style: TextStyle(color: txtColor),
-        ),
+        ), actions: [
+          IconButton.filledTonal(
+            onPressed: () {
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/', (route) => false);
+            },
+            icon: Icon(Icons.logout),
+            color: Colors.white,
+          )
+        ],
         centerTitle: true,
         backgroundColor: Colors.blueGrey,
       ),
