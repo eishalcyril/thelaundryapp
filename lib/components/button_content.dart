@@ -23,7 +23,7 @@ class OnboardContent extends StatefulWidget {
 
 class _OnboardContentState extends State<OnboardContent> {
   late PageController _pageController;
-  Box box = Hive.box('laundry');
+  final Box box = Hive.box('laundry');
 
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -43,9 +43,14 @@ class _OnboardContentState extends State<OnboardContent> {
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   // final TextEditingController _signinpwd = TextEditingController();
-
+  bool _rememberMe = false;
   @override
   void initState() {
+    if (box.containsKey('email') && box.containsKey('password')) {
+      _emailController.text = box.get('email');
+      _newPasswordController.text = box.get('password');
+      _rememberMe = true; // Set checkbox to true if credentials are found
+    }
     firstname = TextEditingController(text: '');
     lastname = TextEditingController(text: '');
     // _passwordVisible = true;
@@ -133,13 +138,20 @@ class _OnboardContentState extends State<OnboardContent> {
                           //         : _signupformKey.currentState?.validate()) ??
                           //     false;
 
-                          if (_signinformKey.currentState!.validate() &&
-                              _pageController.page == 1 &&
-                              state is UserInitial) {
+                          if (state is UserInitial &&
+                              _signinformKey.currentState!.validate() &&
+                              _pageController.page == 1) {
                             context.read<UserCubit>().userLogin({
                               'email': _emailController.text,
                               'password': _newPasswordController.text
                             });
+                            if (_rememberMe) {
+                              box.put('email', _emailController.text);
+                              box.put('password', _newPasswordController.text);
+                            } else {
+                              box.delete('email');
+                              box.delete('password');
+                            }
                             // await NewApiService().login(
                             //     email: _emailController.text,
                             //     password: _signinpwd.text);
@@ -475,6 +487,33 @@ class _OnboardContentState extends State<OnboardContent> {
                                     },
                                     controller: _newPasswordController,
                                     obscureText: _newPasswordVisible,
+                                  ),
+                                  Row(
+                                    spacing: 10,
+                                    children: [
+                                      SizedBox(
+                                        height: 24.0,
+                                        width: 24.0,
+                                        child: Checkbox(
+                                          activeColor: primaryColor,
+                                          checkColor: Colors.white,
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          value: _rememberMe,
+                                          onChanged: (bool? value) {
+                                            setState(() {
+                                              _rememberMe = value ?? false;
+                                            });
+                                          },
+                                        ),
+                                      ),
+                                      Text(
+                                        ' Remember me',
+                                        style: TextStyle(
+                                            fontFamily: 'interfont',
+                                            color: primaryColor),
+                                      ),
+                                    ],
                                   ),
                                   TextButton(
                                       onPressed: () {

@@ -30,9 +30,17 @@ class UserCubit extends Cubit<UserState> {
               userRole: response['data']['isAdmin'],
               userData: response['data']));
         } else if (response['type'] == 'ERROR') {
+          await rootScaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: Text(response['data'].toString()),
+              backgroundColor: Colors.green,
+            ),
+          );
           emit(
             LoginError(),
           );
+          await Future.delayed(Duration(seconds: 1));
+          emit(UserInitial());
         } else {
           emit(UserInitial());
         }
@@ -64,6 +72,8 @@ class UserCubit extends Cubit<UserState> {
           emit(
             LoginError(),
           );
+          await Future.delayed(Duration(seconds: 1));
+          emit(UserInitial());
         } else {
           emit(UserInitial());
         }
