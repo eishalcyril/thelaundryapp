@@ -55,6 +55,12 @@ class UserCubit extends Cubit<UserState> {
           );
           emit(UserInitial());
         } else if (response['type'] == 'ERROR') {
+          await rootScaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: Text('Signup Unsucccessful'),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
           emit(
             LoginError(),
           );

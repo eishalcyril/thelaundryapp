@@ -91,10 +91,11 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                   trailing: PopupMenuButton<int>(
                     color: primaryColor,
                     elevation: 8,
-                    onSelected: (status) {
+                    onSelected: (status) async {
+                      if (_isUpdating) return;
                       _isUpdating = true; // Set the flag to true
 
-                      NewApiService()
+                      await NewApiService()
                           .updateOrderStatus(
                         orderId: order['id'],
                         status: status,
