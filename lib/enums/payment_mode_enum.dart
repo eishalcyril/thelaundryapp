@@ -1,0 +1,4 @@
+enum PaymentModes {
+  CARD,
+  UPI,
+}
