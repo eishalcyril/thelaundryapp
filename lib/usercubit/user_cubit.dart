@@ -1,9 +1,11 @@
 import 'dart:developer' as developer;
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
+import 'package:laundry_app/main.dart';
 
 part 'user_state.dart';
 
@@ -38,15 +40,20 @@ class UserCubit extends Cubit<UserState> {
         emit(LoginLoading());
         final response =
             await NewApiService().post(endpoint: 'User/Signup', body: body);
+        developer.log(response.toString());
         if (response == null) {
           emit(LoginError());
           return;
         }
 
         if (response['type'] == 'SUCCESS') {
-          emit(LoginSuccess(
-              userRole: response['data']['isAdmin'],
-              userData: response['data']));
+          await rootScaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: Text('Signup Succcessful'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          emit(UserInitial());
         } else if (response['type'] == 'ERROR') {
           emit(
             LoginError(),

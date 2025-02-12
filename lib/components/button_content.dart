@@ -39,16 +39,16 @@ class _OnboardContentState extends State<OnboardContent> {
   final _signupformKey = GlobalKey<FormState>();
   late bool isPhone;
   bool forgotPasswordBool = false;
-  late bool _passwordVisible;
+  // late bool _passwordVisible;
   late bool _newPasswordVisible;
   late bool _confirmPasswordVisible;
-  late TextEditingController _passwordController;
+  // late TextEditingController _passwordController;
 
   final TextEditingController _newPasswordController = TextEditingController();
   late TextEditingController _addressController;
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  final TextEditingController _signinpwd = TextEditingController();
+  // final TextEditingController _signinpwd = TextEditingController();
 
   @override
   void initState() {
@@ -58,7 +58,7 @@ class _OnboardContentState extends State<OnboardContent> {
     firstname = TextEditingController(text: '');
     lastname = TextEditingController(text: '');
     isPhone = widget.phoneNumber == null ? false : true;
-    _passwordVisible = true;
+    // _passwordVisible = true;
     _newPasswordVisible = true;
     _confirmPasswordVisible = true;
     context.read<UserCubit>().initState();
@@ -154,15 +154,15 @@ class _OnboardContentState extends State<OnboardContent> {
                               state is UserInitial) {
                             context.read<UserCubit>().userLogin({
                               'email': _emailController.text,
-                              'password': _signinpwd.text
+                              'password': _newPasswordController.text
                             });
                             // await NewApiService().login(
                             //     email: _emailController.text,
                             //     password: _signinpwd.text);
                           } else {
                             context.read<UserCubit>().userLogin({
-                              'firstName': firstname,
-                              'lastName': lastname,
+                              'firstName': firstname.text,
+                              'lastName': lastname.text,
                               'email': _emailController.text,
                               'address': _addressController.text,
                               'phoneNumber': _phoneNumberController.text,
@@ -489,7 +489,7 @@ class _OnboardContentState extends State<OnboardContent> {
                                       }
                                       return null;
                                     },
-                                    controller: _signinpwd,
+                                    controller: _newPasswordController,
                                     obscureText: _newPasswordVisible,
                                   ),
                                   TextButton(
