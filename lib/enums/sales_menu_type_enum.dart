@@ -1,0 +1,6 @@
+enum SalesMenuType {
+  GENERAL,
+  PATIENT,
+  EMPLOYEE,
+  COMPLEMENTARY
+}

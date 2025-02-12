@@ -1,0 +1,6 @@
+enum OrderType {
+  TAKEAWAY,
+  PREORDER,
+  INSTANTORDER,
+  CARTSERVICE,
+}
