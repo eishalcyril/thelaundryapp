@@ -20,17 +20,13 @@ class UserCubit extends Cubit<UserState> {
         emit(LoginLoading());
         final response =
             await NewApiService().post(endpoint: 'User/Login', body: body);
-        if (response == null) {
-          emit(LoginError());
-          return;
-        }
         developer.log(response.toString());
         if (response['type'] == 'SUCCESS') {
           emit(LoginSuccess(
               userRole: response['data']['isAdmin'],
               userData: response['data']));
         } else if (response['type'] == 'ERROR') {
-          await rootScaffoldMessengerKey.currentState?.showSnackBar(
+          rootScaffoldMessengerKey.currentState?.showSnackBar(
             SnackBar(
               content: Text(response['data'].toString()),
               backgroundColor: Colors.green,
@@ -49,13 +45,9 @@ class UserCubit extends Cubit<UserState> {
         final response =
             await NewApiService().post(endpoint: 'User/Signup', body: body);
         developer.log(response.toString());
-        if (response == null) {
-          emit(LoginError());
-          return;
-        }
 
         if (response['type'] == 'SUCCESS') {
-          await rootScaffoldMessengerKey.currentState?.showSnackBar(
+          rootScaffoldMessengerKey.currentState?.showSnackBar(
             SnackBar(
               content: Text('Signup Succcessful'),
               backgroundColor: Colors.green,
@@ -63,7 +55,7 @@ class UserCubit extends Cubit<UserState> {
           );
           emit(UserInitial());
         } else if (response['type'] == 'ERROR') {
-          await rootScaffoldMessengerKey.currentState?.showSnackBar(
+          rootScaffoldMessengerKey.currentState?.showSnackBar(
             SnackBar(
               content: Text('Signup Unsucccessful'),
               backgroundColor: Colors.redAccent,

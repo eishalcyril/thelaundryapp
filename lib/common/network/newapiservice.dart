@@ -144,6 +144,7 @@ class NewApiService {
           ? List<Map<String, dynamic>>.from(responseData['data']['data'])
           : [];
     } on DioException catch (e) {
+      log(e.toString());
       return [];
     }
   }
@@ -165,6 +166,7 @@ class NewApiService {
           ? List<Map<String, dynamic>>.from(responseData['data']['data'])
           : [];
     } on DioException catch (e) {
+      log(e.toString());
       return [];
     }
   }
@@ -194,6 +196,7 @@ class NewApiService {
           ? List<Map<String, dynamic>>.from(responseData['data']['data'])
           : [];
     } on DioException catch (e) {
+      log(e.toString());
       return [];
     }
   }
@@ -239,6 +242,7 @@ class NewApiService {
           ? List<Map<String, dynamic>>.from(responseData['data']['data'])
           : [];
     } on DioException catch (e) {
+      log(e.toString());
       return [];
     }
   }

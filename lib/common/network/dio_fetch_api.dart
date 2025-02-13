@@ -2,12 +2,10 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import 'package:get/get.dart' hide FormData;
 import 'package:laundry_app/common/network/dio_client.dart';
 import 'package:laundry_app/common/network/dio_exception.dart';
 import 'package:laundry_app/common/snack_bar_service.dart';
 import 'package:laundry_app/enums/response_type_enum.dart';
-
 
 class FetchApi {
   factory FetchApi() {
