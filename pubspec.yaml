@@ -43,7 +43,7 @@ dependencies:
   hive_flutter: ^1.1.0
   get: ^4.6.5
   intl: ^0.18.1
-  flutter_launcher_icons: ^0.13.1
+  flutter_launcher_icons: ^0.14.3
   dio: ^5.3.4
   logger: ^2.0.2+1
   web_socket_channel: ^2.2.0
@@ -96,6 +96,12 @@ flutter:
   assets:
     - assets/
   #   - images/a_dot_ham.jpeg
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/washing.png"
+  min_sdk_android: 21
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

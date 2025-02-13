@@ -270,6 +270,7 @@ class _OnboardContentState extends State<OnboardContent> {
               child: Padding(
                 padding: const EdgeInsets.all(15.0),
                 child: Column(
+                  spacing: 15,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Center(

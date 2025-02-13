@@ -63,8 +63,7 @@ class _OrdersPageState extends State<OrdersPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            Lottie.asset(
-                                'assets/loading-2.json', 
+                            Lottie.asset('assets/loading-2.json',
                                 height: MediaQuery.of(context).size.height * .5,
                                 width: MediaQuery.of(context).size.width * .5),
                             Text(
@@ -84,6 +83,7 @@ class _OrdersPageState extends State<OrdersPage> {
                       itemBuilder: (context, index) {
                         final order = orders[index];
                         return Card(
+                          elevation: 6,
                           margin: const EdgeInsets.only(bottom: 16),
                           child: ListTile(
                             title: Row(
