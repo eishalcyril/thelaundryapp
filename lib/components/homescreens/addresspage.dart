@@ -105,11 +105,11 @@ class _AddressesPageState extends State<AddressesPage> {
             ),
           );
         } else {
-       return Center(
-                        child: Lottie.asset('assets/loading-washing.json',
-                            height: MediaQuery.of(context).size.height * .5,
-                            width: MediaQuery.of(context).size.width * .5),
-                      );
+          return Center(
+            child: Lottie.asset('assets/loading-washing.json',
+                height: MediaQuery.of(context).size.height * .5,
+                width: MediaQuery.of(context).size.width * .5),
+          );
         }
       },
     );
