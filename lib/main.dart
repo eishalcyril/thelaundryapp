@@ -20,18 +20,33 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-    statusBarColor: Colors.blueGrey,
-    statusBarIconBrightness: Brightness.dark,
-  ));
   Bloc.observer = GlobalBlocObserver();
-  runApp(MyApp(
-    appRouter: AppRouter(),
+  runApp(SystemUiOverlay(
+    child: MyApp(
+      appRouter: AppRouter(),
+    ),
   ));
 }
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
+
+class SystemUiOverlay extends StatelessWidget {
+  final Widget child;
+
+  const SystemUiOverlay({Key? key, required this.child}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // Set the system UI overlay style
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.blueGrey,
+      statusBarIconBrightness: Brightness.dark,
+    ));
+
+    return child;
+  }
+}
 
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.

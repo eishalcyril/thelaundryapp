@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive/hive.dart';
 import 'package:laundry_app/components/first_page.dart';
@@ -58,6 +59,10 @@ class _OnboardContentState extends State<OnboardContent> {
     _confirmPasswordVisible = true;
     context.read<UserCubit>().initState();
     super.initState();
+    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+      statusBarColor: Colors.blueGrey,
+      statusBarIconBrightness: Brightness.dark,
+    ));
     _pageController = PageController(initialPage: 0)
       ..addListener(() {
         setState(() {});

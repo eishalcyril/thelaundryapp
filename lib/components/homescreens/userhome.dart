@@ -1,4 +1,3 @@
-import 'dart:developer' as dev;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -292,124 +291,103 @@ class _HomePageState extends State<HomePage> {
                           await NewApiService()
                               .placeOrder(orderData: orderData)
                               .then((response) async {
-                            if (!mounted) return;
+                            if (!mounted)
+                              return; // Check if the widget is still mounted
                             setState(() {
                               isLoading = false;
                             });
                             if (response['type'] == 'SUCCESS') {
-                              Navigator.pop(context); // Close the bottom sheet
-                              // Show "Ready to Pay" dialog
+                              Navigator.pop(context); // Close the dialog
+                              // Show success animation
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,
-                                builder: (context) => AlertDialog(
-                                  backgroundColor: Colors.blueGrey[50],
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  title: Text(
-                                    'Ready to Pay?',
-                                    style: TextStyle(
-                                      color: Colors.blueGrey[800],
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  content: Text(
-                                    'Please confirm your payment to proceed.',
-                                    style: TextStyle(
-                                      color: Colors.blueGrey[600],
-                                    ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(
-                                            context); // Close the dialog
-                                        // Show success animation
-                                        showDialog(
-                                          context: context,
-                                          barrierDismissible: false,
-                                          builder: (context) => Center(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Container(
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12)),
-                                                  child: Lottie.asset(
-                                                    'assets/payment-success.json',
-                                                    height: 200,
-                                                    width: 200,
-                                                    repeat: false,
-                                                    onLoaded: (composition) {
-                                                      Future.delayed(
-                                                        Duration(
-                                                            milliseconds:
-                                                                composition
-                                                                    .duration
-                                                                    .inMilliseconds),
-                                                        () {
-                                                          Navigator.pop(
-                                                              context);
-                                                          widget.onPlaced!();
-                                                        },
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 16),
-                                                const Text(
-                                                  'Payment Successful!',
-                                                  style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 18,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                      child: Text(
-                                        'Pay',
-                                        style: TextStyle(
-                                          color: Colors.blueGrey[800],
+                                builder: (context) => Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        child: Lottie.asset(
+                                          'assets/payment-success.json',
+                                          height: 200,
+                                          width: 200,
+                                          repeat: false,
+                                          onLoaded: (composition) {
+                                            Future.delayed(
+                                              Duration(
+                                                  milliseconds: composition
+                                                      .duration.inMilliseconds),
+                                              () {
+                                                if (!mounted)
+                                                  return; // Check again before popping
+                                                Navigator.pop(context);
+                                                widget.onPlaced!();
+                                              },
+                                            );
+                                          },
                                         ),
                                       ),
-                                    ),
-                                    TextButton(
-                                      onPressed: () {
-                                        Navigator.pop(
-                                            context); // Close the dialog
-                                        Navigator.pop(
-                                            context); // Close the bottom sheet
-                                      },
-                                      child: Text(
-                                        'Cancel',
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'Payment Successful!',
                                         style: TextStyle(
-                                          color: Colors.blueGrey[800],
+                                          color: Colors.white,
+                                          fontSize: 18,
                                         ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               );
                             } else {
-                              dev.log(response.toString());
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(response['message'] ??
-                                      'Failed to place order'),
-                                  backgroundColor: Colors.red,
+                              // Show failure animation
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        child: Lottie.asset(
+                                          'assets/payment-failed.json',
+                                          height: 200,
+                                          width: 200,
+                                          repeat: false,
+                                          onLoaded: (composition) {
+                                            Future.delayed(
+                                              Duration(
+                                                  milliseconds: composition
+                                                      .duration.inMilliseconds),
+                                              () {
+                                                if (!mounted)
+                                                  return; // Check again before popping
+                                                Navigator.pop(context);
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'Payment Failed!',
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 18,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               );
-
-                              setState(() {
-                                widget.onPlaced!();
-                              });
                             }
                           });
                         },
