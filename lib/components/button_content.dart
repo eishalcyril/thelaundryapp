@@ -121,7 +121,8 @@ class _OnboardContentState extends State<OnboardContent> {
                 if (state is UserSignUp || state is UserInitial)
                   Positioned(
                     height: 46,
-                    bottom: 48 + progress,
+                    bottom:
+                        MediaQuery.of(context).size.height * .025 + progress,
                     right: 16,
                     child: GestureDetector(
                       onTap: () async {

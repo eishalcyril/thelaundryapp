@@ -130,6 +130,7 @@ class _HomePageState extends State<HomePage> {
     final quantityController = TextEditingController();
     final descriptionController = TextEditingController();
     DateTime? selectedDateTime;
+    bool isLoading = false;
 
     showModalBottomSheet(
       context: context,
@@ -138,212 +139,297 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            left: 16,
-            right: 16,
-            top: 16,
-          ),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Place Order - ${service['serviceName']}',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: quantityController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: 'Quantity',
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor)),
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter quantity';
-                    }
-                    if (int.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    if (int.parse(value) <= 0) {
-                      return 'Quantity must be greater than 0';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: descriptionController,
-                  maxLines: 3,
-                  decoration: InputDecoration(
-                    labelText: 'Additional Description (Optional)',
-                    enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor)),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                StatefulBuilder(
-                  builder: (context, setState) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Expected Delivery Date & Time',
-                          style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 16,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        InkWell(
-                          onTap: () async {
-                            final now = DateTime.now();
-                            final date = await showDatePicker(
-                              context: context,
-                              initialDate: now.add(const Duration(days: 1)),
-                              firstDate: now.add(const Duration(days: 1)),
-                              lastDate: now.add(const Duration(days: 30)),
-                            );
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                left: 16,
+                right: 16,
+                top: 16,
+              ),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Place Order - ${service['serviceName']}',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    TextFormField(
+                      controller: quantityController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: 'Quantity',
+                        enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor)),
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter quantity';
+                        }
+                        if (int.tryParse(value) == null) {
+                          return 'Please enter a valid number';
+                        }
+                        if (int.parse(value) <= 0) {
+                          return 'Quantity must be greater than 0';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: descriptionController,
+                      maxLines: 3,
+                      decoration: InputDecoration(
+                        labelText: 'Additional Description (Optional)',
+                        enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor)),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: () async {
+                        final now = DateTime.now();
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: now.add(const Duration(days: 1)),
+                          firstDate: now.add(const Duration(days: 1)),
+                          lastDate: now.add(const Duration(days: 30)),
+                        );
 
-                            if (date != null) {
-                              final time = await showTimePicker(
+                        if (date != null) {
+                          final time = await showTimePicker(
+                            context: context,
+                            initialTime: TimeOfDay.now(),
+                          );
+
+                          if (time != null) {
+                            setState(() {
+                              selectedDateTime = DateTime(
+                                date.year,
+                                date.month,
+                                date.day,
+                                time.hour,
+                                time.minute,
+                              );
+                            });
+                          }
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              selectedDateTime != null
+                                  ? '${selectedDateTime!.day}/${selectedDateTime!.month}/${selectedDateTime!.year} ${selectedDateTime!.hour}:${selectedDateTime!.minute.toString().padLeft(2, '0')}'
+                                  : 'Select Date & Time',
+                              style: TextStyle(
+                                color: selectedDateTime != null
+                                    ? Colors.black
+                                    : Colors.grey,
+                              ),
+                            ),
+                            const Icon(Icons.calendar_today),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () async {
+                          if (!formKey.currentState!.validate() ||
+                              selectedDateTime == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                    'Please fill all required fields and select delivery date & time'),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() {
+                            isLoading = true;
+                          });
+
+                          final uuid = Uuid();
+                          final orderData = {
+                            "id": uuid.v4(),
+                            "customerId": NewApiService.userId,
+                            "serviceId": service['id'],
+                            "quantity": int.parse(quantityController.text),
+                            "expectedDeliveryDate":
+                                selectedDateTime!.toIso8601String(),
+                            "additionalDescription":
+                                descriptionController.text.isEmpty
+                                    ? ''
+                                    : descriptionController.text,
+                            "status": 0,
+                            "dateCreated": DateTime.now().toIso8601String()
+                          };
+
+                          await NewApiService()
+                              .placeOrder(orderData: orderData)
+                              .then((response) async {
+                            if (!mounted) return;
+                            setState(() {
+                              isLoading = false;
+                            });
+                            if (response['type'] == 'SUCCESS') {
+                              Navigator.pop(context); // Close the bottom sheet
+                              // Show "Ready to Pay" dialog
+                              showDialog(
                                 context: context,
-                                initialTime: TimeOfDay.now(),
+                                barrierDismissible: false,
+                                builder: (context) => AlertDialog(
+                                  backgroundColor: Colors.blueGrey[50],
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  title: Text(
+                                    'Ready to Pay?',
+                                    style: TextStyle(
+                                      color: Colors.blueGrey[800],
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  content: Text(
+                                    'Please confirm your payment to proceed.',
+                                    style: TextStyle(
+                                      color: Colors.blueGrey[600],
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(
+                                            context); // Close the dialog
+                                        // Show success animation
+                                        showDialog(
+                                          context: context,
+                                          barrierDismissible: false,
+                                          builder: (context) => Center(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                      color: Colors.white,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12)),
+                                                  child: Lottie.asset(
+                                                    'assets/payment-success.json',
+                                                    height: 200,
+                                                    width: 200,
+                                                    repeat: false,
+                                                    onLoaded: (composition) {
+                                                      Future.delayed(
+                                                        Duration(
+                                                            milliseconds:
+                                                                composition
+                                                                    .duration
+                                                                    .inMilliseconds),
+                                                        () {
+                                                          Navigator.pop(
+                                                              context);
+                                                          widget.onPlaced!();
+                                                        },
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 16),
+                                                const Text(
+                                                  'Payment Successful!',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 18,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Text(
+                                        'Pay',
+                                        style: TextStyle(
+                                          color: Colors.blueGrey[800],
+                                        ),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pop(
+                                            context); // Close the dialog
+                                        Navigator.pop(
+                                            context); // Close the bottom sheet
+                                      },
+                                      child: Text(
+                                        'Cancel',
+                                        style: TextStyle(
+                                          color: Colors.blueGrey[800],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            } else {
+                              dev.log(response.toString());
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(response['message'] ??
+                                      'Failed to place order'),
+                                  backgroundColor: Colors.red,
+                                ),
                               );
 
-                              if (time != null) {
-                                setState(() {
-                                  selectedDateTime = DateTime(
-                                    date.year,
-                                    date.month,
-                                    date.day,
-                                    time.hour,
-                                    time.minute,
-                                  );
-                                });
-                              }
+                              setState(() {
+                                widget.onPlaced!();
+                              });
                             }
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  selectedDateTime != null
-                                      ? '${selectedDateTime!.day}/${selectedDateTime!.month}/${selectedDateTime!.year} ${selectedDateTime!.hour}:${selectedDateTime!.minute.toString().padLeft(2, '0')}'
-                                      : 'Select Date & Time',
-                                  style: TextStyle(
-                                    color: selectedDateTime != null
-                                        ? Colors.black
-                                        : Colors.grey,
-                                  ),
-                                ),
-                                const Icon(Icons.calendar_today),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    onPressed: () async {
-                      if (!formKey.currentState!.validate() ||
-                          selectedDateTime == null) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                                'Please fill all required fields and select delivery date & time'),
-                          ),
-                        );
-                        return;
-                      }
-
-                      final uuid = Uuid();
-                      // service['id'] = NewApiService.userId;
-                      final orderData = {
-                        "id": uuid.v4(),
-                        "customerId": NewApiService.userId,
-                        "serviceId": service['id'],
-                        // "service": service,
-                        "quantity": int.parse(quantityController.text),
-                        "expectedDeliveryDate":
-                            selectedDateTime!.toIso8601String(),
-                        "additionalDescription":
-                            descriptionController.text.isEmpty
-                                ? ''
-                                : descriptionController.text,
-                        "status": 0,
-                        "dateCreated": DateTime.now().toIso8601String()
-                      };
-
-                      await NewApiService()
-                          .placeOrder(orderData: orderData)
-                          .then((response) {
-                        Navigator.pop(context);
-                        dev.log(orderData.toString());
-
-                        if (response['type'] == 'SUCCESS') {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Order placed successfully!'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-
-                          setState(() {
-                            widget.onPlaced!();
                           });
-                        } else {
-                          dev.log(response.toString());
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(response['message'] ??
-                                  'Failed to place order'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-
-                          setState(() {
-                            widget.onPlaced!();
-                          });
-                        }
-                      });
-                    },
-                    child: Text(
-                      'Place Order',
-                      style: TextStyle(fontSize: 16, color: txtColor),
+                        },
+                        child: isLoading
+                            ? CircularProgressIndicator(
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              )
+                            : Text(
+                                'Place Order',
+                                style: TextStyle(fontSize: 16, color: txtColor),
+                              ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
-                const SizedBox(height: 20),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );

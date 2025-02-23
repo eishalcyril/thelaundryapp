@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:laundry_app/Router/app_router.dart';
 import 'package:laundry_app/config.dart';
@@ -13,7 +12,7 @@ import 'package:laundry_app/usercubit/user_cubit.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 
 Future<void> main() async {
-    await Hive.initFlutter();
+  await Hive.initFlutter();
   await Hive.openBox('laundry');
 
   /// For using Custom [BlocObserver] instead of the default BlocObserver.
@@ -21,11 +20,19 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
+  SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
+    statusBarColor: Colors.blueGrey,
+    statusBarIconBrightness: Brightness.dark,
+  ));
   Bloc.observer = GlobalBlocObserver();
-  runApp(MyApp( appRouter: AppRouter(),));
+  runApp(MyApp(
+    appRouter: AppRouter(),
+  ));
 }
+
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
+
 class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   const MyApp({
@@ -39,7 +46,6 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
         providers: [
           BlocProvider(create: (context) => UserCubit()),
-        
         ],
         child: GlobalLoaderOverlay(
           useDefaultLoading: false,
@@ -69,4 +75,3 @@ class MyApp extends StatelessWidget {
         ));
   }
 }
-

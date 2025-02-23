@@ -17,17 +17,15 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
     required String newmaterial,
     required double newprice,
   }) async {
-    // Show a dialog or navigate to an edit page
-    // After editing, call the updateService method
+  
     final response = await NewApiService().updateService(
       id: id,
-      serviceName: newservice, // Get this from user input
-      materialType: newmaterial, // Get this from user input
-      price: newprice, // Get this from user input
+      serviceName: newservice,
+      materialType: newmaterial, 
+      price: newprice, 
     );
 
     if (response['type'] == 'SUCCESS') {
-      // Handle success (e.g., show a success message, refresh the list)
       setState(() {});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -36,7 +34,6 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
           backgroundColor: Colors.red,
         ),
       );
-      // Handle error
     }
   }
 
@@ -44,7 +41,6 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
     final response = await NewApiService().deleteService(id);
 
     if (response['type'] == 'SUCCESS') {
-      // Handle success (e.g., show a success message, refresh the list)
       setState(() {});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -161,7 +157,6 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                                   children: [
                                     TextButton.icon(
                                       onPressed: () {
-                                        // Implement edit functionality
                                         _showEditDialog(context, service);
                                       },
                                       icon: const Icon(Icons.edit),
@@ -173,7 +168,6 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                                     const SizedBox(width: 8),
                                     TextButton.icon(
                                       onPressed: () {
-                                        // Implement delete functionality
                                         _showDeleteDialog(
                                             context, service['id']);
                                       },
@@ -253,7 +247,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                   labelText: 'Service Name',
                   enabledBorder: OutlineInputBorder(
                     borderSide:
-                        BorderSide(color: primaryColor), // Use primaryColor
+                        BorderSide(color: primaryColor), 
                   ),
                 ),
               ),
@@ -263,7 +257,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                   labelText: 'Material Type',
                   enabledBorder: OutlineInputBorder(
                     borderSide:
-                        BorderSide(color: primaryColor), // Use primaryColor
+                        BorderSide(color: primaryColor),
                   ),
                 ),
               ),
@@ -273,7 +267,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                   labelText: 'Price',
                   enabledBorder: OutlineInputBorder(
                     borderSide:
-                        BorderSide(color: primaryColor), // Use primaryColor
+                        BorderSide(color: primaryColor),
                   ),
                 ),
                 keyboardType: TextInputType.number,

@@ -6,7 +6,7 @@ import 'common/color_generator.dart';
 
 Color primaryColor = Colors.blueGrey;
 Color txtColor = Colors.white;
-Color sectxtColor = Colors.grey;
+Color sectxtColor = Colors.black54;
 Color secondaryColor = const Color.fromARGB(255, 4, 116, 130);
 
 MaterialColor primaryShade = generateMaterialColor(primaryColor);
