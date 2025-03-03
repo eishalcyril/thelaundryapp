@@ -28,6 +28,9 @@ class _OnboardContentState extends State<OnboardContent> {
 
   final TextEditingController _phoneNumberController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+    final TextEditingController _signupemailController = TextEditingController();
+    
+    final TextEditingController _signupPass = TextEditingController();
   late TextEditingController firstname;
   late TextEditingController lastname;
   final _signinformKey = GlobalKey<FormState>();
@@ -166,10 +169,10 @@ class _OnboardContentState extends State<OnboardContent> {
                             context.read<UserCubit>().userLogin({
                               'firstName': firstname.text,
                               'lastName': lastname.text,
-                              'email': _emailController.text,
+                              'email': _signupemailController.text,
                               'address': _addressController.text,
                               'phoneNumber': _phoneNumberController.text,
-                              'password': _newPasswordController.text
+                              'password': _signupPass.text
                             });
                           }
                           // });
@@ -836,7 +839,7 @@ class _OnboardContentState extends State<OnboardContent> {
                                       }
                                       return null;
                                     },
-                                    controller: _emailController,
+                                    controller: _signupemailController,
                                   ),
                                   TextFormField(
                                     cursorErrorColor: Colors.blue[900],
@@ -1097,7 +1100,7 @@ class _OnboardContentState extends State<OnboardContent> {
                                       }
                                       return null;
                                     },
-                                    controller: _newPasswordController,
+                                    controller: _signupPass,
                                     obscureText: _newPasswordVisible,
                                   ),
                                   TextFormField(
