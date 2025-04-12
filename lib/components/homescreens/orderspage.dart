@@ -14,6 +14,22 @@ class OrdersPage extends StatefulWidget {
 }
 
 class _OrdersPageState extends State<OrdersPage> {
+  Future<List<Map<String, dynamic>>>? _ordersFuture;
+  final ScrollController _scrollController = ScrollController();
+  @override
+  void initState() {
+    // TODO: implement initState
+    _ordersFuture = NewApiService().getCustomerOrders();
+    super.initState();
+  }
+
+  Future<void> _refreshOrders() async {
+    setState(() {
+      _ordersFuture = NewApiService().getCustomerOrders();
+    });
+    await _ordersFuture;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -45,198 +61,207 @@ class _OrdersPageState extends State<OrdersPage> {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: FutureBuilder(
-                  future: NewApiService().getCustomerOrders(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: Lottie.asset('assets/loading-washing.json',
-                            height: MediaQuery.of(context).size.height * .5,
-                            width: MediaQuery.of(context).size.width * .5),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
+                child: RefreshIndicator(
+                  onRefresh: _refreshOrders,
+                  child: FutureBuilder(
+                    future: _ordersFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: Lottie.asset('assets/loading-washing.json',
+                              height: MediaQuery.of(context).size.height * .5,
+                              width: MediaQuery.of(context).size.width * .5),
+                        );
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
 
-                    final orders = snapshot.data ?? [];
-                    if (orders.isEmpty) {
-                      return Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Lottie.asset('assets/loading-2.json',
-                                height: MediaQuery.of(context).size.height * .5,
-                                width: MediaQuery.of(context).size.width * .5),
-                            Text(
-                              'No Orders Yet',
-                              style: TextStyle(
-                                  color: primaryColor,
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                            LineDash(length: 30, color: primaryColor)
-                          ],
-                        ),
-                      );
-                    }
-                    return ListView.builder(
-                      itemCount: orders.length,
-                      itemBuilder: (context, index) {
-                        final order = orders[index];
-                        return Container(
-                          margin: const EdgeInsets.symmetric(vertical: 8.0),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border:
-                                Border.all(color: Colors.blueGrey, width: 2),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.5),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: ExpansionTile(
-                            collapsedBackgroundColor: Colors.white,
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  order['orderId'].toString().substring(0, 8),
-                                  style: TextStyle(
-                                      color: primaryColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 18),
-                                ),
-                                Text(
-                                  _getStatusText(order['status']),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      fontSize: context
-                                          .textTheme.bodyMedium!.fontSize!,
-                                      color: _getStatusColor(order['status']),
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            subtitle: Text(
-                              '${DateTime.parse(order['expectedDeliveryDate']).toLocal().toString().split(' ')[0]} ${DateFormat.jm().format(DateTime.parse(order['expectedDeliveryDate']).toLocal())}',
-                              style: TextStyle(color: Colors.blueGrey[600]),
-                            ),
+                      final orders = snapshot.data ?? [];
+                      if (orders.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.start,
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0),
-                                child: Column(
-                                  children: List.generate(order['items'].length,
-                                      (itemIndex) {
-                                    final item = order['items'][itemIndex];
-                                    return Column(
-                                      children: [
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 8.0),
-                                          child: Table(
-                                            columnWidths: const {
-                                              0: FixedColumnWidth(80),
-                                              1: FixedColumnWidth(20),
-                                              2: FlexColumnWidth(),
-                                            },
-                                            children: [
-                                              _buildTableRow('Service',
-                                                  item['serviceName'] ?? ''),
-                                              _buildTableRow('Quantity',
-                                                  item['quantity'].toString()),
-                                            ],
-                                          ),
-                                        ),
-                                        if (order['status'] != 3 &&
-                                            order['status'] != 4 &&
-                                            order['status'] != 2)
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(Icons.edit,
-                                                    color: Colors.blueGrey),
-                                                onPressed: () {
-                                                  _showEditItemDialog(
-                                                      context, order, item);
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        if (itemIndex <
-                                            order['items'].length - 1)
-                                          Divider(
-                                            color: Colors.blueGrey,
-                                            thickness: 1,
-                                          ),
-                                      ],
-                                    );
-                                  }),
-                                ),
+                              Lottie.asset('assets/loading-2.json',
+                                  height:
+                                      MediaQuery.of(context).size.height * .5,
+                                  width:
+                                      MediaQuery.of(context).size.width * .5),
+                              Text(
+                                'No Orders Yet',
+                                style: TextStyle(
+                                    color: primaryColor,
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.bold),
                               ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16.0, vertical: 8.0),
-                                child: Text(
-                                  'Additional Description: ${order['additionalDescription'] ?? ''}',
-                                  style: TextStyle(color: Colors.blueGrey[600]),
-                                ),
-                              ),
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    if (order['status'] != 3 &&
-                                        order['status'] != 4 &&
-                                        order['status'] != 2) ...[
-                                      Text('Edit order'),
-                                      IconButton(
-                                        icon: Icon(Icons.edit_calendar,
-                                            color: Colors.blueGrey),
-                                        onPressed: () {
-                                          _showEditDialog(context, order);
-                                        },
-                                      ),
-                                    ],
-                                    if (order['status'] == 0 ||
-                                        order['status'] == 1)
-                                      IconButton(
-                                        icon: Icon(Icons.cancel,
-                                            color: Colors.red.shade700),
-                                        onPressed: () async {
-                                          await NewApiService().cancelOrder(
-                                            orderId: order['orderId'],
-                                          );
-                                          setState(() {});
-                                        },
-                                      ),
-                                    if (order['status'] == 3 &&
-                                        !order['reviewSubmitted'])
-                                      IconButton(
-                                        icon: Icon(Icons.rate_review,
-                                            color: Colors.green),
-                                        onPressed: () {
-                                          _showReviewDialog(context, order);
-                                        },
-                                      ),
-                                  ],
-                                ),
-                              ),
+                              LineDash(length: 30, color: primaryColor)
                             ],
                           ),
                         );
-                      },
-                    );
-                  },
+                      }
+                      return ListView.builder(
+                        itemCount: orders.length,
+                        itemBuilder: (context, index) {
+                          final order = orders[index];
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              border:
+                                  Border.all(color: Colors.blueGrey, width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.5),
+                                  spreadRadius: 2,
+                                  blurRadius: 5,
+                                  offset: Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: ExpansionTile(
+                              collapsedBackgroundColor: Colors.white,
+                              title: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    order['orderId'].toString().substring(0, 8),
+                                    style: TextStyle(
+                                        color: primaryColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18),
+                                  ),
+                                  Text(
+                                    _getStatusText(order['status']),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        fontSize: context
+                                            .textTheme.bodyMedium!.fontSize!,
+                                        color: _getStatusColor(order['status']),
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                              subtitle: Text(
+                                '${DateTime.parse(order['expectedDeliveryDate']).toLocal().toString().split(' ')[0]} ${DateFormat.jm().format(DateTime.parse(order['expectedDeliveryDate']).toLocal())}',
+                                style: TextStyle(color: Colors.blueGrey[600]),
+                              ),
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0),
+                                  child: Column(
+                                    children: List.generate(
+                                        order['items'].length, (itemIndex) {
+                                      final item = order['items'][itemIndex];
+                                      return Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 8.0),
+                                            child: Table(
+                                              columnWidths: const {
+                                                0: FixedColumnWidth(80),
+                                                1: FixedColumnWidth(20),
+                                                2: FlexColumnWidth(),
+                                              },
+                                              children: [
+                                                _buildTableRow('Service',
+                                                    item['serviceName'] ?? ''),
+                                                _buildTableRow(
+                                                    'Quantity',
+                                                    item['quantity']
+                                                        .toString()),
+                                              ],
+                                            ),
+                                          ),
+                                          if (order['status'] != 3 &&
+                                              order['status'] != 4 &&
+                                              order['status'] != 2)
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                IconButton(
+                                                  icon: Icon(Icons.edit,
+                                                      color: Colors.blueGrey),
+                                                  onPressed: () {
+                                                    _showEditItemDialog(
+                                                        context, order, item);
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          if (itemIndex <
+                                              order['items'].length - 1)
+                                            Divider(
+                                              color: Colors.blueGrey,
+                                              thickness: 1,
+                                            ),
+                                        ],
+                                      );
+                                    }),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16.0, vertical: 8.0),
+                                  child: Text(
+                                    'Additional Description: ${order['additionalDescription'] ?? ''}',
+                                    style:
+                                        TextStyle(color: Colors.blueGrey[600]),
+                                  ),
+                                ),
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (order['status'] != 3 &&
+                                          order['status'] != 4 &&
+                                          order['status'] != 2) ...[
+                                        Text('Edit order'),
+                                        IconButton(
+                                          icon: Icon(Icons.edit_calendar,
+                                              color: Colors.blueGrey),
+                                          onPressed: () {
+                                            _showEditDialog(context, order);
+                                          },
+                                        ),
+                                      ],
+                                      if (order['status'] == 0 ||
+                                          order['status'] == 1)
+                                        IconButton(
+                                          icon: Icon(Icons.cancel,
+                                              color: Colors.red.shade700),
+                                          onPressed: () async {
+                                            await NewApiService().cancelOrder(
+                                              orderId: order['orderId'],
+                                            );
+                                            setState(() {});
+                                          },
+                                        ),
+                                      if (order['status'] == 3 &&
+                                          !order['reviewSubmitted'])
+                                        IconButton(
+                                          icon: Icon(Icons.rate_review,
+                                              color: Colors.green),
+                                          onPressed: () {
+                                            _showReviewDialog(context, order);
+                                          },
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
