@@ -23,7 +23,7 @@ class UserCubit extends Cubit<UserState> {
         developer.log(response.toString());
         if (response['type'] == 'SUCCESS') {
           emit(LoginSuccess(
-              userRole: response['data']['isAdmin'],
+              userRole: response['data']['userType'],
               userData: response['data']));
         } else if (response['type'] == 'ERROR') {
           rootScaffoldMessengerKey.currentState?.showSnackBar(

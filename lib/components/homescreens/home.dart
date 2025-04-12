@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:laundry_app/components/adminpages/addservice.dart';
+import 'package:laundry_app/components/adminpages/admin_users.dart'; // Import the new page
 import 'package:laundry_app/components/adminpages/adminhome.dart';
 import 'package:laundry_app/components/adminpages/adminorder.dart';
 import 'package:laundry_app/components/homescreens/addresspage.dart';
+import 'package:laundry_app/components/homescreens/deliveryagentscreens/availableorders.dart';
+import 'package:laundry_app/components/homescreens/deliveryagentscreens/mydeliveries.dart';
 import 'package:laundry_app/components/homescreens/orderspage.dart';
 import 'package:laundry_app/components/homescreens/userhome.dart';
 import 'package:laundry_app/usercubit/user_cubit.dart';
@@ -28,7 +31,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return BlocBuilder<UserCubit, UserState>(
       builder: (context, state) {
-        if (state is LoginSuccess && state.userRole == true) {
+        if (state is LoginSuccess && state.userRole == 1) {
           // Admin UI
           return Scaffold(
             body: IndexedStack(
@@ -36,6 +39,7 @@ class _HomeState extends State<Home> {
               children: [
                 AdminServicesPage(),
                 AdminOrdersPage(),
+                AdminUsersPage(), // Add the new page here
                 AddServicePage(
                   onServiceAdded: () {
                     setState(() {
@@ -47,7 +51,7 @@ class _HomeState extends State<Home> {
             ),
             bottomNavigationBar: _buildBottomNav(isAdmin: true),
           );
-        } else {
+        } else if (state is LoginSuccess && state.userRole == 0) {
           // User UI
           return Scaffold(
             body: IndexedStack(
@@ -66,12 +70,28 @@ class _HomeState extends State<Home> {
             ),
             bottomNavigationBar: _buildBottomNav(isAdmin: false),
           );
+        } else if (state is LoginSuccess && state.userRole == 2) {
+          // DeliveryAgent UI
+          return Scaffold(
+            body: IndexedStack(
+              index: _currentIndex,
+              children: [
+                AvailableOrdersPage(),
+                MyDeliveriesPage(),
+              ],
+            ),
+            bottomNavigationBar:
+                _buildBottomNav(isAdmin: false, isDeliveryAgent: true),
+          );
+        } else {
+          return Scaffold();
         }
       },
     );
   }
 
-  Widget _buildBottomNav({required bool isAdmin}) {
+  Widget _buildBottomNav(
+      {required bool isAdmin, bool isDeliveryAgent = false}) {
     return Container(
       decoration: BoxDecoration(
         boxShadow: [
@@ -104,28 +124,46 @@ class _HomeState extends State<Home> {
                     label: 'Orders',
                   ),
                   BottomNavigationBarItem(
+                    icon: Icon(Icons.people),
+                    activeIcon: Icon(Icons.people, size: 28),
+                    label: 'Users',
+                  ),
+                  BottomNavigationBarItem(
                     icon: Icon(Icons.add_circle_outline),
                     activeIcon: Icon(Icons.add_circle, size: 28),
                     label: 'Add Service',
                   ),
                 ]
-              : const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.home_rounded),
-                    activeIcon: Icon(Icons.home_rounded, size: 28),
-                    label: 'Home',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.receipt_long_rounded),
-                    activeIcon: Icon(Icons.receipt_long_rounded, size: 28),
-                    label: 'Orders',
-                  ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.location_on_outlined),
-                    activeIcon: Icon(Icons.location_on_rounded, size: 28),
-                    label: 'Addresses',
-                  ),
-                ],
+              : isDeliveryAgent
+                  ? const [
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.assignment_turned_in),
+                        activeIcon: Icon(Icons.assignment_turned_in, size: 28),
+                        label: 'Available Orders',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.delivery_dining),
+                        activeIcon: Icon(Icons.delivery_dining, size: 28),
+                        label: 'My Deliveries',
+                      ),
+                    ]
+                  : const [
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.home_rounded),
+                        activeIcon: Icon(Icons.home_rounded, size: 28),
+                        label: 'Home',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.receipt_long_rounded),
+                        activeIcon: Icon(Icons.receipt_long_rounded, size: 28),
+                        label: 'Orders',
+                      ),
+                      BottomNavigationBarItem(
+                        icon: Icon(Icons.location_on_outlined),
+                        activeIcon: Icon(Icons.location_on_rounded, size: 28),
+                        label: 'Address',
+                      ),
+                    ],
         ),
       ),
     );

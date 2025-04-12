@@ -106,7 +106,7 @@ class _OrdersPageState extends State<OrdersPage> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  order['id'].toString().substring(0, 8),
+                                  order['orderId'].toString().substring(0, 8),
                                   style: TextStyle(
                                       color: primaryColor,
                                       fontWeight: FontWeight.bold,
@@ -125,28 +125,69 @@ class _OrdersPageState extends State<OrdersPage> {
                             ),
                             subtitle: Text(
                               '${DateTime.parse(order['expectedDeliveryDate']).toLocal().toString().split(' ')[0]} ${DateFormat.jm().format(DateTime.parse(order['expectedDeliveryDate']).toLocal())}',
-                              style: TextStyle(
-                                  color: Colors.blueGrey[
-                                      600]), // Blue-grey accent for text
+                              style: TextStyle(color: Colors.blueGrey[600]),
                             ),
                             children: [
                               Padding(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 16.0),
-                                child: Table(
-                                  columnWidths: const {
-                                    0: FixedColumnWidth(80),
-                                    1: FixedColumnWidth(20),
-                                    2: FlexColumnWidth(),
-                                  },
-                                  children: [
-                                    _buildTableRow(
-                                        'Service', order['serviceName'] ?? ''),
-                                    _buildTableRow('Quantity',
-                                        order['quantity'].toString()),
-                                    _buildTableRow('Additional Description',
-                                        order['additionalDescription']),
-                                  ],
+                                child: Column(
+                                  children: List.generate(order['items'].length,
+                                      (itemIndex) {
+                                    final item = order['items'][itemIndex];
+                                    return Column(
+                                      children: [
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              vertical: 8.0),
+                                          child: Table(
+                                            columnWidths: const {
+                                              0: FixedColumnWidth(80),
+                                              1: FixedColumnWidth(20),
+                                              2: FlexColumnWidth(),
+                                            },
+                                            children: [
+                                              _buildTableRow('Service',
+                                                  item['serviceName'] ?? ''),
+                                              _buildTableRow('Quantity',
+                                                  item['quantity'].toString()),
+                                            ],
+                                          ),
+                                        ),
+                                        if (order['status'] != 3 &&
+                                            order['status'] != 4 &&
+                                            order['status'] != 2)
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(Icons.edit,
+                                                    color: Colors.blueGrey),
+                                                onPressed: () {
+                                                  _showEditItemDialog(
+                                                      context, order, item);
+                                                },
+                                              ),
+                                            ],
+                                          ),
+                                        if (itemIndex <
+                                            order['items'].length - 1)
+                                          Divider(
+                                            color: Colors.blueGrey,
+                                            thickness: 1,
+                                          ),
+                                      ],
+                                    );
+                                  }),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0, vertical: 8.0),
+                                child: Text(
+                                  'Additional Description: ${order['additionalDescription'] ?? ''}',
+                                  style: TextStyle(color: Colors.blueGrey[600]),
                                 ),
                               ),
                               Align(
@@ -155,14 +196,17 @@ class _OrdersPageState extends State<OrdersPage> {
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (order['status'] != 3 &&
-                                        order['status'] != 4)
+                                        order['status'] != 4 &&
+                                        order['status'] != 2) ...[
+                                      Text('Edit order'),
                                       IconButton(
-                                        icon: Icon(Icons.edit,
+                                        icon: Icon(Icons.edit_calendar,
                                             color: Colors.blueGrey),
                                         onPressed: () {
                                           _showEditDialog(context, order);
                                         },
                                       ),
+                                    ],
                                     if (order['status'] == 0 ||
                                         order['status'] == 1)
                                       IconButton(
@@ -170,9 +214,18 @@ class _OrdersPageState extends State<OrdersPage> {
                                             color: Colors.red.shade700),
                                         onPressed: () async {
                                           await NewApiService().cancelOrder(
-                                            orderId: order['id'],
+                                            orderId: order['orderId'],
                                           );
                                           setState(() {});
+                                        },
+                                      ),
+                                    if (order['status'] == 3 &&
+                                        !order['reviewSubmitted'])
+                                      IconButton(
+                                        icon: Icon(Icons.rate_review,
+                                            color: Colors.green),
+                                        onPressed: () {
+                                          _showReviewDialog(context, order);
                                         },
                                       ),
                                   ],
@@ -197,38 +250,16 @@ class _OrdersPageState extends State<OrdersPage> {
     return TableRow(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(label, style: TextStyle(color: secondaryColor)),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
-          child: Text(':',
-              style: TextStyle(color: Colors.black)), // Colon in its own column
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Text(':', style: TextStyle(color: Colors.black)),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
           child: Text(value, style: TextStyle(color: sectxtColor)),
-        ),
-      ],
-    );
-  }
-
-  TableRow _buildTableRowwithColor(String label, String value, Color clr) {
-    return TableRow(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
-          child: Text(label, style: TextStyle(color: secondaryColor)),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
-          child: Text(':',
-              style:
-                  TextStyle(color: secondaryColor)), // Colon in its own column
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4.0), // Vertical space
-          child: Text(value, style: TextStyle(color: clr)),
         ),
       ],
     );
@@ -236,6 +267,8 @@ class _OrdersPageState extends State<OrdersPage> {
 
   Color _getStatusColor(int status) {
     switch (status) {
+      case 0:
+        return Colors.orange;
       case 1:
         return Colors.blue;
       case 2:
@@ -251,22 +284,110 @@ class _OrdersPageState extends State<OrdersPage> {
 
   String _getStatusText(int status) {
     switch (status) {
+      case 0:
+        return 'Pending';
       case 1:
-        return 'Processing';
-      case 2:
         return 'In Progress';
-      case 3:
+      case 2:
         return 'Completed';
       case 4:
-        return 'Cancelled Successfully';
+        return 'Cancelled';
+      case 3:
+        return 'Delivered';
       default:
         return 'Pending';
     }
   }
 
-  void _showEditDialog(BuildContext context, Map<String, dynamic> order) {
+  void _showEditItemDialog(BuildContext context, Map<String, dynamic> order,
+      Map<String, dynamic> item) {
     final quantityController =
-        TextEditingController(text: order['quantity'].toString());
+        TextEditingController(text: item['quantity'].toString());
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.blueGrey[50],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: Text(
+            'Edit Item',
+            style: TextStyle(
+              color: Colors.blueGrey[800],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: quantityController,
+                decoration: InputDecoration(
+                  labelText: 'Quantity',
+                  labelStyle: TextStyle(color: Colors.blueGrey),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueGrey),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueGrey[700]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.blueGrey[800]),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                // Update the quantity in the item
+                item['quantity'] = int.parse(quantityController.text);
+
+                // Prepare the updated order data
+                final updatedOrderData = {
+                  "items": order['items'].map((item) {
+                    return {
+                      "serviceId": item['serviceId'],
+                      "quantity": item['quantity'],
+                    };
+                  }).toList(),
+                  "expectedDeliveryDate": order['expectedDeliveryDate'],
+                  "additionalDescription": order['additionalDescription'],
+                };
+
+                // Call the API with the updated order data
+                await NewApiService().updateCustomerOrder(
+                  orderId: order['orderId'],
+                  orderData: updatedOrderData,
+                );
+
+                setState(() {});
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Save',
+                style: TextStyle(color: Colors.blueGrey[800]),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showEditDialog(BuildContext context, Map<String, dynamic> order) {
     final descriptionController =
         TextEditingController(text: order['additionalDescription']);
     DateTime? selectedDateTime = DateTime.parse(order['expectedDeliveryDate']);
@@ -288,24 +409,7 @@ class _OrdersPageState extends State<OrdersPage> {
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            spacing: MediaQuery.of(context).size.height * .01,
             children: [
-              TextField(
-                controller: quantityController,
-                decoration: InputDecoration(
-                  labelText: 'Quantity',
-                  labelStyle: TextStyle(color: Colors.blueGrey),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blueGrey),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.blueGrey[700]!),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                keyboardType: TextInputType.number,
-              ),
               TextField(
                 controller: descriptionController,
                 decoration: InputDecoration(
@@ -395,21 +499,14 @@ class _OrdersPageState extends State<OrdersPage> {
             ),
             TextButton(
               onPressed: () async {
-                final updatedOrder = {
-                  "id": order['id'],
-                  "customerId": order['customerId'],
-                  "serviceId": order['serviceId'],
-                  "quantity": int.parse(quantityController.text),
-                  "expectedDeliveryDate": selectedDateTime?.toIso8601String() ??
-                      order['expectedDeliveryDate'],
-                  "additionalDescription": descriptionController.text,
-                  "status": order['status'],
-                  "dateCreated": order['dateCreated']
-                };
+                order['additionalDescription'] = descriptionController.text;
+                order['expectedDeliveryDate'] =
+                    selectedDateTime?.toIso8601String() ??
+                        order['expectedDeliveryDate'];
 
                 await NewApiService().updateCustomerOrder(
-                  orderId: order['id'],
-                  orderData: updatedOrder,
+                  orderId: order['orderId'],
+                  orderData: order,
                 );
 
                 setState(() {});
@@ -417,6 +514,113 @@ class _OrdersPageState extends State<OrdersPage> {
               },
               child: Text(
                 'Save',
+                style: TextStyle(color: Colors.blueGrey[800]),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showReviewDialog(BuildContext context, Map<String, dynamic> order) {
+    final reviewController = TextEditingController();
+    int rating = 0;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.blueGrey[50],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: Text(
+            'Review Order',
+            style: TextStyle(
+              color: Colors.blueGrey[800],
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: reviewController,
+                decoration: InputDecoration(
+                  labelText: 'Review',
+                  labelStyle: TextStyle(color: Colors.blueGrey),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueGrey),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.blueGrey[700]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(5, (index) {
+                  return IconButton(
+                    icon: Icon(
+                      index < rating ? Icons.star : Icons.star_border,
+                      color: Colors.yellow,
+                    ),
+                    onPressed: () {
+                      rating = index + 1;
+                    },
+                  );
+                }),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.blueGrey[800]),
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                final reviewData = {
+                  "content": reviewController.text,
+                  "rating": rating,
+                };
+
+                final response = await NewApiService().submitOrderReview(
+                  orderId: order['orderId'],
+                  reviewData: reviewData,
+                );
+
+                if (response['type'] == 'SUCCESS') {
+                  order['reviewSubmitted'] = true;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Review submitted successfully!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Could not submit review.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+
+                setState(() {});
+                Navigator.pop(context);
+              },
+              child: Text(
+                'Submit',
                 style: TextStyle(color: Colors.blueGrey[800]),
               ),
             ),

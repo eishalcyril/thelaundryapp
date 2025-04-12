@@ -19,7 +19,7 @@ class LoginSuccess extends UserState {
   });
 
   final Map? userData;
-  final bool? userRole;
+  final int? userRole;
 }
 
 class IsAlreadyLoginTrue extends UserState {}

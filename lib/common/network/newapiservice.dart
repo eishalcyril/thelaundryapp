@@ -359,6 +359,96 @@ class NewApiService {
     }
   }
 
+  // DeliveryAgent APIs
+  Future<List<Map<String, dynamic>>> getAvailableOrders() async {
+    try {
+      final response = await _dio.get('DeliveryAgent/AvailableOrders',
+          options: Options(headers: {"UserId": userId}));
+      final responseData = _handleResponse(response);
+      return responseData['type'] == 'SUCCESS'
+          ? List<Map<String, dynamic>>.from(responseData['data']['data'])
+          : [];
+    } on DioException catch (e) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> takeOrder({required String orderId}) async {
+    try {
+      final response = await _dio.post('DeliveryAgent/TakeOrder/$orderId',
+          options: Options(headers: {"UserId": userId}));
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> markDelivered({required String orderId}) async {
+    try {
+      final response = await _dio.put('DeliveryAgent/MarkDelivered/$orderId',
+          options: Options(headers: {"UserId": userId}));
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getMyDeliveries() async {
+    try {
+      final response = await _dio.get('DeliveryAgent/MyDeliveries',
+          options: Options(headers: {"UserId": userId}));
+      final responseData = _handleResponse(response);
+      return responseData['type'] == 'SUCCESS'
+          ? List<Map<String, dynamic>>.from(responseData['data']['data'])
+          : [];
+    } on DioException catch (e) {
+      return [];
+    }
+  }
+
+  // Admin APIs for User Management
+  Future<List<Map<String, dynamic>>> getAllUsers() async {
+    try {
+      final response = await _dio.get('Admin/Users',
+          options: Options(headers: {"UserId": userId}));
+      final responseData = _handleResponse(response);
+      return responseData['type'] == 'SUCCESS'
+          ? List<Map<String, dynamic>>.from(responseData['data']['data'])
+          : [];
+    } on DioException catch (e) {
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> changeUserType({
+    required String userId,
+    required int newUserType,
+  }) async {
+    try {
+      final response = await _dio.patch(
+        'Admin/ChangeUserType/$userId',
+        data: {'newUserType': newUserType},
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  // Customer Order Review
+  Future<Map<String, dynamic>> submitOrderReview({
+    required String orderId,
+    required Map<String, dynamic> reviewData,
+  }) async {
+    try {
+      final response = await _dio.post('Customer/Orders/$orderId/Review',
+          data: reviewData, options: Options(headers: {"CustomerId": userId}));
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
   void showSnackbar(String message, int statusCode) {
     Color backgroundColor;
     // switch (statusCode) {

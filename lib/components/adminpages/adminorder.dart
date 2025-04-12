@@ -13,6 +13,29 @@ class AdminOrdersPage extends StatefulWidget {
 
 class _AdminOrdersPageState extends State<AdminOrdersPage> {
   bool _isUpdating = false;
+  Future<List<Map<String, dynamic>>>? _ordersFuture;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _ordersFuture = NewApiService().getAdminOrders();
+  }
+
+  Future<void> _refreshOrders() async {
+    final currentPosition =
+        _scrollController.hasClients ? _scrollController.offset : 0.0;
+    setState(() {
+      _ordersFuture = NewApiService().getAdminOrders();
+    });
+    await _ordersFuture;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(currentPosition);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,134 +57,177 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
         ],
         backgroundColor: primaryColor,
       ),
-      body: FutureBuilder(
-        future: NewApiService().getAdminOrders(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: Lottie.asset('assets/loading-washing.json',
-                  height: MediaQuery.of(context).size.height * .5,
-                  width: MediaQuery.of(context).size.width * .5),
-            );
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-          final orders = snapshot.data ?? [];
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: orders.length,
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return Card(
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Stack(
-                  children: [
-                    ListTile(
-                      title: Container(
-                        decoration: BoxDecoration(
-                            border: Border.all(color: secondaryColor)),
-                        padding: EdgeInsets.all(6),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: RefreshIndicator(
+        onRefresh: _refreshOrders,
+        child: FutureBuilder(
+          future: _ordersFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: Lottie.asset('assets/loading-washing.json',
+                    height: MediaQuery.of(context).size.height * .5,
+                    width: MediaQuery.of(context).size.width * .5),
+              );
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            }
+            final orders = snapshot.data ?? [];
+            return ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: orders.length,
+              itemBuilder: (context, index) {
+                final order = orders[index];
+                return Card(
+                  elevation: 4,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Stack(
+                    children: [
+                      ListTile(
+                        title: Container(
+                          decoration: BoxDecoration(
+                              border: Border.all(color: secondaryColor)),
+                          padding: EdgeInsets.all(6),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Order',
+                                style: TextStyle(
+                                  color: secondaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '#${order['orderId'].toString().substring(0, 8)}',
+                                style: TextStyle(
+                                  color: secondaryColor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        subtitle: Column(
                           children: [
-                            Text(
-                              'Order',
-                              style: TextStyle(
-                                color: secondaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Table(
+                              columnWidths: const {
+                                0: FixedColumnWidth(120),
+                                1: FixedColumnWidth(20),
+                                2: FlexColumnWidth(),
+                              },
+                              children: [
+                                _buildTableRow(
+                                    'Customer ID',
+                                    order['customerId']
+                                        .toString()
+                                        .substring(0, 8)),
+                                _buildTableRow('Additional Description',
+                                    order['additionalDescription']),
+                                _buildTableRowwithColor(
+                                    'Status',
+                                    _getStatusText(order['status']),
+                                    _getStatusColor(order['status'])),
+                                _buildTableRow(
+                                    'Delivery',
+                                    DateFormat('yyyy-MM-dd HH:mm').format(
+                                        DateTime.parse(
+                                                order['expectedDeliveryDate'])
+                                            .toLocal())),
+                                _buildTableRow('Total Amount',
+                                    order['totalAmount'].toString()),
+                              ],
                             ),
-                            Text(
-                              '#${order['id'].toString().substring(0, 8)}',
-                              style: TextStyle(
-                                color: secondaryColor,
-                                fontWeight: FontWeight.bold,
-                              ),
+                            Divider(
+                              color: primaryColor,
                             ),
+                            ...order['items'].map((item) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 4.0, horizontal: 6),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(8)),
+                                  padding: EdgeInsets.all(4),
+                                  child: Table(
+                                    columnWidths: const {
+                                      0: FixedColumnWidth(120),
+                                      1: FixedColumnWidth(20),
+                                      2: FlexColumnWidth(),
+                                    },
+                                    children: [
+                                      _buildTableRow(
+                                          'Service', item['serviceName']),
+                                      _buildTableRow('Material Type',
+                                          item['materialType']),
+                                      _buildTableRow('Quantity',
+                                          item['quantity'].toString()),
+                                      _buildTableRow('Price Per Unit',
+                                          item['pricePerUnit'].toString()),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
                           ],
                         ),
                       ),
-                      subtitle: Table(
-                        columnWidths: const {
-                          0: FixedColumnWidth(120),
-                          1: FixedColumnWidth(20),
-                          2: FlexColumnWidth(),
-                        },
-                        children: [
-                          _buildTableRow('Service', order['serviceName']),
-                          _buildTableRow(
-                              'Material Type', order['materialType']),
-                          _buildTableRow(
-                              'Quantity', order['quantity'].toString()),
-                          _buildTableRow('Additional Description',
-                              order['additionalDescription']),
-                          _buildTableRowwithColor(
-                              'Status',
-                              _getStatusText(order['status']),
-                              _getStatusColor(order['status'])),
-                          _buildTableRow(
-                              'Delivery',
-                              DateFormat('yyyy-MM-dd HH:mm').format(
-                                  DateTime.parse(order['expectedDeliveryDate'])
-                                      .toLocal())),
-                        ],
-                      ),
-                    ),
-                    Positioned(
-                      right: 8,
-                      top: MediaQuery.of(context).size.height * .06,
-                      child: PopupMenuButton<int>(
-                        color: primaryColor,
-                        elevation: 8,
-                        onSelected: (status) async {
-                          if (_isUpdating) return;
-                          _isUpdating = true;
+                      Positioned(
+                        right: 8,
+                        top: MediaQuery.of(context).size.height * .06,
+                        child: PopupMenuButton<int>(
+                          color: primaryColor,
+                          elevation: 8,
+                          onSelected: (status) async {
+                            if (_isUpdating) return;
+                            _isUpdating = true;
 
-                          await NewApiService()
-                              .updateOrderStatus(
-                                orderId: order['id'],
-                                status: status,
-                              )
-                              .then((_) {
-                                setState(() {});
-                              })
-                              .catchError((error) {})
-                              .whenComplete(() {
-                                _isUpdating = false;
-                              });
-                        },
-                        itemBuilder: (context) => [
-                          PopupMenuItem(
-                              value: 1,
-                              child: Text(
-                                'Processing',
-                                style: TextStyle(color: txtColor),
-                              )),
-                          PopupMenuItem(
-                              value: 2,
-                              child: Text(
-                                'In Progress',
-                                style: TextStyle(color: txtColor),
-                              )),
-                          PopupMenuItem(
-                              value: 3,
-                              child: Text(
-                                'Completed',
-                                style: TextStyle(color: txtColor),
-                              )),
-                        ],
+                            await NewApiService()
+                                .updateOrderStatus(
+                                  orderId: order['orderId'],
+                                  status: status - 1,
+                                )
+                                .then((_) async {
+                                  await _refreshOrders(); // Refresh after updating status
+                                })
+                                .catchError((error) {})
+                                .whenComplete(() {
+                                  _isUpdating = false;
+                                });
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                                value: 1,
+                                child: Text(
+                                  'Processing',
+                                  style: TextStyle(color: txtColor),
+                                )),
+                            PopupMenuItem(
+                                value: 2,
+                                child: Text(
+                                  'In Progress',
+                                  style: TextStyle(color: txtColor),
+                                )),
+                            PopupMenuItem(
+                                value: 3,
+                                child: Text(
+                                  'Completed',
+                                  style: TextStyle(color: txtColor),
+                                )),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -212,14 +278,16 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
 
   String _getStatusText(int status) {
     switch (status) {
+      case 0:
+        return 'Pending';
       case 1:
-        return 'Processing';
-      case 2:
         return 'In Progress';
-      case 3:
+      case 2:
         return 'Completed';
       case 4:
         return 'Cancelled';
+      case 3:
+        return 'Delivered';
       default:
         return 'Pending';
     }
@@ -227,6 +295,8 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
 
   Color _getStatusColor(int status) {
     switch (status) {
+      case 0:
+        return Colors.orange;
       case 1:
         return Colors.blue;
       case 2:

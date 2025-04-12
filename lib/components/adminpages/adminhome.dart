@@ -17,12 +17,11 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
     required String newmaterial,
     required double newprice,
   }) async {
-  
     final response = await NewApiService().updateService(
       id: id,
       serviceName: newservice,
-      materialType: newmaterial, 
-      price: newprice, 
+      materialType: newmaterial,
+      price: newprice,
     );
 
     if (response['type'] == 'SUCCESS') {
@@ -50,6 +49,29 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
         ),
       );
     }
+  }
+
+  Future<List<Map<String, dynamic>>>? _servicesFuture;
+  final ScrollController _scrollController = ScrollController();
+  @override
+  void initState() {
+    // TODO: implement initState
+    _servicesFuture = NewApiService().getAdminServices();
+    super.initState();
+  }
+
+  Future<void> _refreshServices() async {
+    final currentPosition =
+        _scrollController.hasClients ? _scrollController.offset : 0.0;
+    setState(() {
+      _servicesFuture = NewApiService().getAdminServices();
+    });
+    await _servicesFuture;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(currentPosition);
+      }
+    });
   }
 
   @override
@@ -89,123 +111,113 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: FutureBuilder(
-                  future: NewApiService().getAdminServices(),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(
-                        child: Lottie.asset('assets/loading-washing.json',
-                            height: MediaQuery.of(context).size.height * .5,
-                            width: MediaQuery.of(context).size.width * .5),
-                      );
-                    }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-                    final services = snapshot.data ?? [];
-                    return ListView.builder(
-                      itemCount: services.length,
-                      itemBuilder: (context, index) {
-                        final service = services[index];
-                        return Card(
-                          elevation: 2,
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            service['serviceName'],
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            'Material: ${service['materialType']}',
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    Text(
-                                      '\Rs. ${service['price']}',
-                                      style: const TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blueGrey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 16),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.end,
-                                  children: [
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        _showEditDialog(context, service);
-                                      },
-                                      icon: const Icon(Icons.edit),
-                                      label: const Text('Edit'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.blueGrey,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    TextButton.icon(
-                                      onPressed: () {
-                                        _showDeleteDialog(
-                                            context, service['id']);
-                                      },
-                                      icon: const Icon(Icons.delete_outline),
-                                      label: const Text('Delete'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.red.shade700,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
+                child: RefreshIndicator(
+                  onRefresh: _refreshServices,
+                  child: FutureBuilder(
+                    future: _servicesFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return Center(
+                          child: Lottie.asset('assets/loading-washing.json',
+                              height: MediaQuery.of(context).size.height * .5,
+                              width: MediaQuery.of(context).size.width * .5),
                         );
-                      },
-                    );
-                  },
+                      }
+                      if (snapshot.hasError) {
+                        return Center(child: Text('Error: ${snapshot.error}'));
+                      }
+                      final services = snapshot.data ?? [];
+                      return ListView.builder(
+                        controller: _scrollController,
+                        itemCount: services.length,
+                        itemBuilder: (context, index) {
+                          final service = services[index];
+                          return Card(
+                            elevation: 2,
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              service['serviceName'],
+                                              style: const TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Material: ${service['materialType']}',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Text(
+                                        '\Rs. ${service['price']}',
+                                        style: const TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.blueGrey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          _showEditDialog(context, service);
+                                        },
+                                        icon: const Icon(Icons.edit),
+                                        label: const Text('Edit'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.blueGrey,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          _showDeleteDialog(
+                                              context, service['id']);
+                                        },
+                                        icon: const Icon(Icons.delete_outline),
+                                        label: const Text('Delete'),
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ),
             ],
           ),
         ),
       ),
-      // floatingActionButtonLocation: FloatingActionButtonLocation.endContained,
-      // floatingActionButton: FloatingActionButton.extended(
-      //   onPressed: () {
-      //     Navigator.push(
-      //       context,
-      //       MaterialPageRoute(
-      //         builder: (context) => const AddServicePage(),
-      //       ),
-      //     );
-      //   },
-      //   backgroundColor: Colors.blueGrey,
-      //   icon: const Icon(Icons.add),
-      //   label: const Text('Add Service'),
-      // ),
     );
   }
 
@@ -246,8 +258,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                 decoration: InputDecoration(
                   labelText: 'Service Name',
                   enabledBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: primaryColor), 
+                    borderSide: BorderSide(color: primaryColor),
                   ),
                 ),
               ),
@@ -256,8 +267,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                 decoration: InputDecoration(
                   labelText: 'Material Type',
                   enabledBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: primaryColor),
+                    borderSide: BorderSide(color: primaryColor),
                   ),
                 ),
               ),
@@ -266,8 +276,7 @@ class _AdminServicesPageState extends State<AdminServicesPage> {
                 decoration: InputDecoration(
                   labelText: 'Price',
                   enabledBorder: OutlineInputBorder(
-                    borderSide:
-                        BorderSide(color: primaryColor),
+                    borderSide: BorderSide(color: primaryColor),
                   ),
                 ),
                 keyboardType: TextInputType.number,
