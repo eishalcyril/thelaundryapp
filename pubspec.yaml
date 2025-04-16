@@ -66,6 +66,8 @@ dependencies:
   sms_autofill: ^2.4.1
   animated_text_kit: ^4.2.2
   uuid: ^4.5.1
+  firebase_core: ^3.13.0
+  firebase_messaging: ^15.2.5
 dependency_overrides:
   intl: ^0.18.1
   win32: ^5.5.4

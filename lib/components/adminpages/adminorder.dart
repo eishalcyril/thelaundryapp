@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
 import 'package:laundry_app/config.dart';
+import 'package:laundry_app/enums/user_type_enum.dart';
 import 'package:lottie/lottie.dart';
 
 class AdminOrdersPage extends StatefulWidget {
@@ -184,20 +185,40 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                           elevation: 8,
                           onSelected: (status) async {
                             if (_isUpdating) return;
-                            _isUpdating = true;
+                            setState(() {
+                              _isUpdating = true;
+                            });
 
-                            await NewApiService()
-                                .updateOrderStatus(
-                                  orderId: order['orderId'],
-                                  status: status - 1,
-                                )
-                                .then((_) async {
-                                  await _refreshOrders(); // Refresh after updating status
-                                })
-                                .catchError((error) {})
-                                .whenComplete(() {
-                                  _isUpdating = false;
-                                });
+                            final newStatus = status - 1;
+
+                            final result =
+                                await NewApiService().updateOrderStatus(
+                              orderId: order['orderId'],
+                              status: newStatus,
+                            );
+
+                            if (result['type'] == 'SUCCESS') {
+                              // Send notification on successful status update
+                              await NewApiService()
+                                  .sendPushNotification(
+                                userType: UserType.customer,
+                                // topic: order['customerId']
+                                //     .toString()
+                                //     .substring(0, 8),
+                                title: 'Order Status Updated',
+                                body:
+                                    'Your order #${order['orderId'].toString().substring(0, 8)} is now ${_getStatusText(newStatus)}.',
+                              )
+
+                                  // Refresh after updating status
+
+                                  .catchError((error) {
+                                return error;
+                              }).whenComplete(() async {
+                                _isUpdating = false;
+                                await _refreshOrders();
+                              });
+                            }
                           },
                           itemBuilder: (context) => [
                             PopupMenuItem(

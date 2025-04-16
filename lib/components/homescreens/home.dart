@@ -9,6 +9,7 @@ import 'package:laundry_app/components/homescreens/deliveryagentscreens/availabl
 import 'package:laundry_app/components/homescreens/deliveryagentscreens/mydeliveries.dart';
 import 'package:laundry_app/components/homescreens/orderspage.dart';
 import 'package:laundry_app/components/homescreens/userhome.dart';
+import 'package:laundry_app/main.dart';
 import 'package:laundry_app/usercubit/user_cubit.dart';
 
 class Home extends StatefulWidget {
@@ -31,6 +32,10 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return BlocBuilder<UserCubit, UserState>(
       builder: (context, state) {
+        if(state is LoginSuccess){
+            WidgetsFlutterBinding.ensureInitialized();
+          initializeAppWithRole(state.userRole!);
+        }
         if (state is LoginSuccess && state.userRole == 1) {
           // Admin UI
           return Scaffold(

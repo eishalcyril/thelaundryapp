@@ -4,11 +4,13 @@ import 'package:intl/intl.dart';
 import 'package:laundry_app/common/line_dash_generator.dart';
 import 'package:laundry_app/common/network/newapiservice.dart';
 import 'package:laundry_app/config.dart';
+import 'package:laundry_app/enums/user_type_enum.dart';
 import 'package:lottie/lottie.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
 
+  
   @override
   State<OrdersPage> createState() => _OrdersPageState();
 }
@@ -17,13 +19,14 @@ class _OrdersPageState extends State<OrdersPage> {
   Future<List<Map<String, dynamic>>>? _ordersFuture;
   final ScrollController _scrollController = ScrollController();
   @override
-  void initState() {
-    // TODO: implement initState
+   void initState() {
     _ordersFuture = NewApiService().getCustomerOrders();
     super.initState();
   }
 
   Future<void> _refreshOrders() async {
+    // Fetch existing order before refreshing
+
     setState(() {
       _ordersFuture = NewApiService().getCustomerOrders();
     });
@@ -239,7 +242,7 @@ class _OrdersPageState extends State<OrdersPage> {
                                           onPressed: () async {
                                             await NewApiService().cancelOrder(
                                               orderId: order['orderId'],
-                                            );
+                                            ).then((value) => NewApiService().sendPushNotification(title: "Order Cancelled", body: "Your order has been cancelled",userType:UserType.customer ));
                                             setState(() {});
                                           },
                                         ),
@@ -397,6 +400,7 @@ class _OrdersPageState extends State<OrdersPage> {
                   orderId: order['orderId'],
                   orderData: updatedOrderData,
                 );
+                    NewApiService().sendPushNotification(title: "Order Updated", body: "Your order has been updated", userType: UserType.customer);
 
                 setState(() {});
                 Navigator.pop(context);
@@ -529,6 +533,7 @@ class _OrdersPageState extends State<OrdersPage> {
                     selectedDateTime?.toIso8601String() ??
                         order['expectedDeliveryDate'];
 
+
                 await NewApiService().updateCustomerOrder(
                   orderId: order['orderId'],
                   orderData: order,
@@ -620,6 +625,7 @@ class _OrdersPageState extends State<OrdersPage> {
                 };
 
                 final response = await NewApiService().submitOrderReview(
+
                   orderId: order['orderId'],
                   reviewData: reviewData,
                 );

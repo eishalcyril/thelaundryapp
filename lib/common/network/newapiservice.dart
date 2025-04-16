@@ -1,8 +1,11 @@
 import 'dart:developer';
 
 import 'package:dio/dio.dart';
+import 'package:firebase_messaging/firebase_messaging.dart' show FirebaseMessaging, NotificationSettings;
 import 'package:flutter/material.dart';
 import 'package:laundry_app/main.dart';
+import 'package:laundry_app/enums/user_type_enum.dart';
+
 
 import 'endpoints.dart';
 
@@ -63,6 +66,7 @@ class NewApiService {
       return _handleDioError(e);
     }
   }
+
   // Future<Map<String, dynamic>> login({
   //   required String email,
   //   required String password,
@@ -179,6 +183,39 @@ class NewApiService {
       final response = await _dio.put(
         'Admin/Orders/$orderId/Status',
         data: status,
+      );
+      return _handleResponse(response);
+    } on DioException catch (e) {
+      return _handleDioError(e);
+    }
+  }
+
+  Future<Map<String, dynamic>> sendPushNotification(
+      {required String body,
+      required String title,
+      required UserType userType}) async {
+    String topic;
+    switch (userType) {
+      case UserType.admin:
+        topic = 'admin_notifications';
+        break;
+      case UserType.customer:
+        topic = 'customer_notifications';
+        break;
+      default:
+        return {'type': 'ERROR', 'message': 'Invalid user type', 'data': null};
+    }
+    try {
+      log("topic: $topic");
+      final response = await _dio.post(
+        'Notifications/Send',
+        data: {
+           'notification': {
+            'body': body,
+            'title': title,
+          },
+          'to': '/topics/$topic',
+        },
       );
       return _handleResponse(response);
     } on DioException catch (e) {
@@ -449,6 +486,62 @@ class NewApiService {
     }
   }
 
+  Future<void> requestNotificationPermissions() async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: false,
+      // dartRuntimeVersion: 1,
+      sound: true,
+    );
+
+    log('User granted permissions: ${settings.authorizationStatus}');
+  }
+
+  Future<String?> getFCMToken() async {
+    try {
+      final fcmToken = await FirebaseMessaging.instance.getToken();
+      log('FCM Token: $fcmToken');
+      return fcmToken;
+    } catch (e) {
+      log('Error getting FCM token: $e');
+      return null;
+    }
+  }
+
+  Future<void> subscribeToAdminNotifications() async {
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic('admin_notifications');
+      log('Subscribed to admin_notifications topic');
+    } catch (e) {
+      log('Error subscribing to admin_notifications topic: $e');
+    }
+  }
+
+  Future<void> subscribeToCustomerNotifications() async {
+    try {
+      await FirebaseMessaging.instance.subscribeToTopic('customer_notifications');
+      log('Subscribed to customer_notifications topic');
+    } catch (e) {
+      log('Error subscribing to customer_notifications topic: $e');
+    }
+  }
+
+    //  This function is not required as we are not showing local notification
+    // in the app. But if in future it is required then we will implement it.
+
+    // const AndroidNotificationDetails androidPlatformChannelSpecifics =
+    //     AndroidNotificationDetails('your channel id', 'your channel name',
+    //         channelDescription: 'your channel description',
+    //         importance: Importance.max,
+    //         priority: Priority.high,
+    //         ticker: 'ticker');  Future<void> showLocalNotification(String title, String body) async {
+//   }
+// }
   void showSnackbar(String message, int statusCode) {
     Color backgroundColor;
     // switch (statusCode) {
